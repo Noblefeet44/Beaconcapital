@@ -260,6 +260,7 @@ export const db = {
     amount: number;
     effectiveDate: string; // "YYYY-MM-DD"
     customTime?: string; // "HH:MM:SS"
+    reference?: string;
   }): Promise<Transaction | null> {
     const actualAmount = params.type === "credit" ? params.amount : -params.amount;
     
@@ -309,9 +310,10 @@ export const db = {
       title,
       description,
       amount: actualAmount,
-      status: "Settled",
+      status: "Settled" as const,
       effectiveDate: params.effectiveDate,
       createdAt,
+      authCode: params.reference || "",
     };
     
     const { data, error } = await supabase.from('transactions').insert(newTx).select().single();

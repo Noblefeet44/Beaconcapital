@@ -186,6 +186,11 @@ function TransactionHistoryContent() {
                           {tx.title}
                         </div>
                         <div className="text-sm text-on-surface-variant">{tx.description}</div>
+                        {tx.authCode && !tx.isOverride && (
+                          <div className="mt-1 text-xs text-on-surface-variant font-mono">
+                            <span className="font-bold">Ref:</span> {tx.authCode}
+                          </div>
+                        )}
                         {tx.isOverride && (
                           <div className="mt-2 text-xs border-l-2 border-primary pl-2 text-primary bg-primary/5 p-1">
                             <span className="font-bold">Reason:</span> {tx.overrideReason} | <span className="font-bold">Auth:</span> {tx.authCode}

@@ -31,6 +31,7 @@ export default function AdminConsole() {
   const [adjustType, setAdjustType] = useState<"credit" | "debit">("credit");
   const [adjustMethod, setAdjustMethod] = useState<"wire" | "ach" | "zelle" | "deposit" | "billpay">("wire");
   const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustReference, setAdjustReference] = useState("");
   const [adjustDate, setAdjustDate] = useState("");
   const [adjustTime, setAdjustTime] = useState("");
   const [adjustLoading, setAdjustLoading] = useState(false);
@@ -128,12 +129,21 @@ export default function AdminConsole() {
       const res = await fetch("/api/admin/adjust", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: accountToAdjust.id, type: adjustType, method: adjustMethod, amount: amt, effectiveDate: adjustDate, customTime: adjustTime }),
+        body: JSON.stringify({
+          accountId: accountToAdjust.id,
+          type: adjustType,
+          method: adjustMethod,
+          amount: amt,
+          effectiveDate: adjustDate,
+          customTime: adjustTime,
+          reference: adjustReference,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Adjustment failed");
       setAdjustSuccess("Balance adjusted successfully!");
       setAdjustAmount("");
+      setAdjustReference("");
       await fetchData();
     } catch (err: any) {
       setAdjustError(err.message || "An unexpected error occurred");
@@ -171,6 +181,7 @@ export default function AdminConsole() {
     setEditLastName(user.lastName);
     setEditPhone(user.phone);
     setAdjustAccountId(user.accounts[0]?.id || "");
+    setAdjustReference("");
     setAdjustSuccess("");
     setAdjustError("");
     setFreezeSuccess("");
@@ -694,6 +705,18 @@ export default function AdminConsole() {
                         />
                       </div>
 
+                      {/* Reference */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-[#90A4AE] uppercase tracking-wide">Reference / Memo</label>
+                        <input
+                          type="text"
+                          value={adjustReference}
+                          onChange={(e) => setAdjustReference(e.target.value)}
+                          placeholder="e.g. REF-1002-TX"
+                          className="w-full bg-[#0D121B] border border-[#1C2433] text-white p-3 font-semibold text-sm focus:outline-none focus:border-[#af0017] rounded-none font-mono"
+                        />
+                      </div>
+
                       {/* Date & Time */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
@@ -779,6 +802,82 @@ export default function AdminConsole() {
 
                 </div>
               </div>
+
+              {/* Customer Transaction History */}
+              <div className="bg-[#131924] border border-[#1C2433] p-6 rounded-none mt-6">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Customer Transaction History</h3>
+                <p className="text-xs text-[#90A4AE] mb-5">History of all credits, debits, and transfers for this customer's checking and savings accounts.</p>
+
+                {(() => {
+                  const customerTxs = allTransactions.filter((tx) =>
+                    selectedUser.accounts.some((a) => a.id === tx.accountId)
+                  );
+
+                  if (customerTxs.length === 0) {
+                    return (
+                      <div className="text-center py-6 text-sm text-[#90A4AE]">
+                        No transaction history found for this customer.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-left min-w-[640px]">
+                        <thead>
+                          <tr className="bg-[#0E131F] border-b border-[#1C2433] text-[#90A4AE] text-xs font-bold uppercase tracking-wider">
+                            <th className="py-4 px-4">Date</th>
+                            <th className="py-4 px-4">Account</th>
+                            <th className="py-4 px-4">Details</th>
+                            <th className="py-4 px-4">Ref</th>
+                            <th className="py-4 px-4 text-center">Status</th>
+                            <th className="py-4 px-4 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#1C2433] text-sm text-[#E0E0E0]">
+                          {customerTxs.map((tx) => {
+                            const account = selectedUser.accounts.find((a) => a.id === tx.accountId);
+                            const isNegative = tx.amount < 0;
+                            return (
+                              <tr key={tx.id} className="hover:bg-[#17202E] transition-colors">
+                                <td className="py-4 px-4 whitespace-nowrap">
+                                  {tx.effectiveDate}
+                                </td>
+                                <td className="py-4 px-4 uppercase tracking-wider text-xs font-semibold whitespace-nowrap">
+                                  {account ? `${account.accountName} (*${account.accountNumber.slice(-4)})` : "Unknown"}
+                                </td>
+                                <td className="py-4 px-4">
+                                  <p className="font-bold text-white">{tx.title}</p>
+                                  <p className="text-xs text-[#90A4AE] mt-0.5">{tx.description}</p>
+                                </td>
+                                <td className="py-4 px-4 font-mono text-xs">
+                                  {tx.authCode ? (
+                                    <span className="bg-[#1A2332] text-[#90A4AE] px-2 py-1 border border-[#2B3A4F]">
+                                      {tx.authCode}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#546E7A]">—</span>
+                                  )}
+                                </td>
+                                <td className="py-4 px-4 text-center whitespace-nowrap">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${tx.status === "Settled" ? "bg-[#2E7D32]" : "bg-yellow-500"}`} />
+                                  <span className={tx.status === "Settled" ? "text-green-400 font-bold text-xs uppercase" : "text-yellow-500 font-bold text-xs uppercase"}>
+                                    {tx.status}
+                                  </span>
+                                </td>
+                                <td className={`py-4 px-4 text-right font-mono font-bold whitespace-nowrap ${isNegative ? "text-red-400" : "text-green-400"}`}>
+                                  {isNegative ? "-" : "+"}${fmt(Math.abs(tx.amount))}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
+
             </div>
           )}
 

@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       amount,
       effectiveDate,
       customTime,
+      reference,
     } = await req.json();
 
     if (!accountId || !type || !method || !amount || parseFloat(amount) <= 0 || !effectiveDate) {
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
       amount: parseFloat(amount),
       effectiveDate,
       customTime: customTime || undefined,
+      reference: reference || undefined,
     });
 
     return NextResponse.json({
