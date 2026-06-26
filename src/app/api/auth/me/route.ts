@@ -16,12 +16,16 @@ export async function GET(req: NextRequest) {
       user: {
         id: user.id,
         username: user.username,
+        email: user.username, // username is stored as email
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
         dob: user.dob,
+        issuance: user.issuance,
         role: user.role,
         status: user.status,
+        isFrozen: user.isFrozen,
+        frozenReason: user.frozenReason,
       },
       accounts,
     });

@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Account } from "@/lib/db";
 
-export default function TransferFundsPage() {
+function TransferFundsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryType = searchParams.get("type");
+
   const [user, setUser] = useState<any>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +26,9 @@ export default function TransferFundsPage() {
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
-  const [transferType, setTransferType] = useState<"ach" | "wire">("ach");
+  const [transferType, setTransferType] = useState<"ach" | "wire">(
+    queryType === "wire" || queryType === "ach" ? queryType : "ach"
+  );
 
   // Amount
   const [amount, setAmount] = useState("");
@@ -510,5 +515,20 @@ export default function TransferFundsPage() {
         </button>
       </nav>
     </div>
+  );
+}
+
+export default function TransferFundsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-primary animate-spin text-[48px]">sync</span>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-sm">Loading Transfer Details...</p>
+        </div>
+      </div>
+    }>
+      <TransferFundsContent />
+    </Suspense>
   );
 }
