@@ -29,7 +29,7 @@ export default function AccountDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch("/api/auth/me");
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
       if (!res.ok) {
         if (res.status === 401) {
           router.push("/login");
@@ -50,7 +50,7 @@ export default function AccountDashboard() {
       }
 
       // Fetch recent transactions
-      const txRes = await fetch("/api/transactions");
+      const txRes = await fetch("/api/transactions", { cache: "no-store" });
       if (txRes.ok) {
         const txData = await txRes.json();
         setTransactions(txData.transactions);

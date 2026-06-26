@@ -116,8 +116,9 @@ export default function TransferFundsPage() {
       }
 
       if (tab === "internal") {
-        // For internal, we can just redirect to dashboard
+        // Refresh forces Next.js to invalidate cached data so updated balances are shown
         router.push("/dashboard");
+        router.refresh();
       } else {
         // Update local limits
         if (transferType === "ach") {

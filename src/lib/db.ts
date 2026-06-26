@@ -183,8 +183,16 @@ export const db = {
     // Update the account balance
     const account = await this.getAccountById(tx.accountId);
     if (account) {
-      const newBalance = Number(account.balance) + Number(tx.amount);
-      await supabase.from('accounts').update({ balance: newBalance }).eq('id', tx.accountId);
+      const newBalance = parseFloat((Number(account.balance) + Number(tx.amount)).toFixed(2));
+      const { error: balanceError } = await supabase
+        .from('accounts')
+        .update({ balance: newBalance })
+        .eq('id', tx.accountId);
+      if (balanceError) {
+        console.error('Error updating account balance:', balanceError);
+      }
+    } else {
+      console.error('Account not found for balance update, accountId:', tx.accountId);
     }
 
     return data as Transaction;
