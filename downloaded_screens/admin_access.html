@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Beacon Capital - Admin Gate</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffdad6",
+                      "secondary-container": "#febb2d",
+                      "on-primary-container": "#ffeeec",
+                      "secondary-fixed": "#ffdea9",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-fixed": "#271900",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "tertiary-fixed": "#e5e2e1",
+                      "primary-container": "#d71e28",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-tertiary-container": "#f5f1f1",
+                      "surface-container": "#eeeeee",
+                      "on-background": "#1a1c1c",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-tint": "#c0011b",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#dadada",
+                      "background": "#f9f9f9",
+                      "on-secondary-fixed-variant": "#5e4100",
+                      "inverse-primary": "#ffb3ad",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#2f3131",
+                      "primary-fixed-dim": "#ffb3ad",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#e6bdb9",
+                      "on-primary-fixed": "#410003",
+                      "surface-variant": "#e2e2e2",
+                      "surface-container-low": "#f3f3f3",
+                      "on-primary-fixed-variant": "#930011",
+                      "secondary": "#7d5800",
+                      "on-error-container": "#93000a",
+                      "tertiary-container": "#6f6e6e",
+                      "surface-container-highest": "#e2e2e2",
+                      "surface-container-high": "#e8e8e8",
+                      "primary": "#af0017",
+                      "secondary-fixed-dim": "#febb2d",
+                      "surface": "#f9f9f9",
+                      "tertiary": "#565656",
+                      "outline": "#916f6c",
+                      "surface-bright": "#f9f9f9",
+                      "on-surface-variant": "#5c3f3d",
+                      "on-surface": "#1a1c1c",
+                      "on-secondary-container": "#6d4c00",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "xs": "4px",
+                      "lg": "40px",
+                      "xl": "64px",
+                      "margin-mobile": "16px",
+                      "sm": "12px",
+                      "md": "24px",
+                      "base": "8px",
+                      "container-max": "1200px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "balance-display": [
+                              "Work Sans"
+                      ],
+                      "label-sm": [
+                              "Work Sans"
+                      ],
+                      "headline-lg": [
+                              "Work Sans"
+                      ],
+                      "headline-md": [
+                              "Work Sans"
+                      ],
+                      "body-lg": [
+                              "Work Sans"
+                      ],
+                      "display-lg": [
+                              "Work Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Work Sans"
+                      ],
+                      "body-md": [
+                              "Work Sans"
+                      ]
+              },
+              "fontSize": {
+                      "balance-display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Base typography reset to enforce theme fonts globally if not applied by utility classes */
+        body {
+            font-family: 'Work Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Subtle elevation mimicking premium stationery */
+        .shadow-architectural {
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-low min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop relative overflow-hidden">
+<!-- Ambient background texture/element for institutional feel without being overwhelming -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle at 50% 50%, #1a1c1c 1px, transparent 1px); background-size: 24px 24px;"></div>
+<main class="w-full max-w-[480px] bg-surface-container-lowest border border-surface-dim shadow-architectural z-10 relative">
+<!-- Top Accent Line -->
+<div class="h-1 w-full bg-primary"></div>
+<div class="p-lg md:p-xl flex flex-col gap-lg">
+<!-- Branding Header -->
+<div class="flex flex-col items-center text-center gap-sm">
+<div class="flex items-center justify-center gap-xs mb-sm">
+<span class="material-symbols-outlined text-[32px] text-primary" style="font-variation-settings: 'FILL' 1;">
+                        account_balance
+                    </span>
+<h1 class="font-balance-display text-balance-display text-on-background tracking-tight">
+                        BEACON CAPITAL
+                    </h1>
+</div>
+<!-- Separator line for hierarchy -->
+<div class="w-16 h-[1px] bg-surface-dim"></div>
+<h2 class="font-headline-md text-headline-md text-tertiary mt-sm">
+                    Staff Command Center - Secure Ledger Access
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">
+                    Authorized institutional personnel only.
+                </p>
+</div>
+<!-- Authentication Form -->
+<form action="#" class="flex flex-col gap-md" method="POST">
+<!-- Email Input -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-background uppercase tracking-wider" for="admin-email">
+                        Institutional ID
+                    </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-lg">
+                                badge
+                            </span>
+</div>
+<input class="w-full bg-surface-bright border border-surface-dim rounded-none py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors placeholder:text-tertiary-fixed-dim" id="admin-email" name="admin-email" placeholder="enter ID or domain email" required="" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="flex flex-col gap-xs">
+<div class="flex justify-between items-baseline">
+<label class="font-label-sm text-label-sm text-on-background uppercase tracking-wider" for="admin-password">
+                            Security Key
+                        </label>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-lg">
+                                key
+                            </span>
+</div>
+<input class="w-full bg-surface-bright border border-surface-dim rounded-none py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors placeholder:text-tertiary-fixed-dim tracking-widest" id="admin-password" name="admin-password" placeholder="••••••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Session Options -->
+<div class="flex items-center justify-between mt-xs">
+<label class="flex items-center gap-sm cursor-pointer group">
+<div class="relative flex items-center justify-center">
+<input class="peer appearance-none w-4 h-4 border border-surface-dim rounded-none bg-surface-bright checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors" type="checkbox"/>
+<span class="material-symbols-outlined text-[14px] text-on-primary absolute opacity-0 peer-checked:opacity-100 pointer-events-none" style="font-variation-settings: 'FILL' 1;">
+                                check
+                            </span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary group-hover:text-on-background transition-colors">Maintain active session</span>
+</label>
+</div>
+<!-- Call to Action -->
+<button class="mt-sm w-full bg-primary text-on-primary font-label-sm text-label-sm uppercase tracking-wider py-md px-lg rounded-none hover:bg-on-primary-fixed-variant active:bg-on-primary-fixed transition-colors flex items-center justify-center gap-sm border border-transparent" type="submit">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
+                        shield_lock
+                    </span>
+                    Authenticate Admin
+                </button>
+</form>
+</div>
+<!-- Footer Info -->
+<div class="bg-surface-container p-sm border-t border-surface-dim flex justify-center items-center gap-xs text-tertiary">
+<span class="material-symbols-outlined text-[16px]">
+                lock
+            </span>
+<span class="font-label-sm text-label-sm text-[10px] tracking-widest uppercase">
+                256-bit Encryption Active
+            </span>
+</div>
+</main>
+</body></html>

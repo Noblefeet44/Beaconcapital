@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Beacon Capital - Account Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffdad6",
+                      "secondary-container": "#febb2d",
+                      "on-primary-container": "#ffeeec",
+                      "secondary-fixed": "#ffdea9",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-fixed": "#271900",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "tertiary-fixed": "#e5e2e1",
+                      "primary-container": "#d71e28",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-tertiary-container": "#f5f1f1",
+                      "surface-container": "#eeeeee",
+                      "on-background": "#1a1c1c",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-tint": "#c0011b",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#dadada",
+                      "background": "#f9f9f9",
+                      "on-secondary-fixed-variant": "#5e4100",
+                      "inverse-primary": "#ffb3ad",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#2f3131",
+                      "primary-fixed-dim": "#ffb3ad",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#e6bdb9",
+                      "on-primary-fixed": "#410003",
+                      "surface-variant": "#e2e2e2",
+                      "surface-container-low": "#f3f3f3",
+                      "on-primary-fixed-variant": "#930011",
+                      "secondary": "#7d5800",
+                      "on-error-container": "#93000a",
+                      "tertiary-container": "#6f6e6e",
+                      "surface-container-highest": "#e2e2e2",
+                      "surface-container-high": "#e8e8e8",
+                      "primary": "#af0017",
+                      "secondary-fixed-dim": "#febb2d",
+                      "surface": "#f9f9f9",
+                      "tertiary": "#565656",
+                      "outline": "#916f6c",
+                      "surface-bright": "#f9f9f9",
+                      "on-surface-variant": "#5c3f3d",
+                      "on-surface": "#1a1c1c",
+                      "on-secondary-container": "#6d4c00",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "xs": "4px",
+                      "lg": "40px",
+                      "xl": "64px",
+                      "margin-mobile": "16px",
+                      "sm": "12px",
+                      "md": "24px",
+                      "base": "8px",
+                      "container-max": "1200px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "balance-display": [
+                              "Work Sans"
+                      ],
+                      "label-sm": [
+                              "Work Sans"
+                      ],
+                      "headline-lg": [
+                              "Work Sans"
+                      ],
+                      "headline-md": [
+                              "Work Sans"
+                      ],
+                      "body-lg": [
+                              "Work Sans"
+                      ],
+                      "display-lg": [
+                              "Work Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Work Sans"
+                      ],
+                      "body-md": [
+                              "Work Sans"
+                      ]
+              },
+              "fontSize": {
+                      "balance-display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background-color: #F5F5F5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        
+        .material-symbols-outlined.fill-1 {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        .premium-shadow {
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background bg-background min-h-screen flex flex-col pt-16 pb-20 md:pb-0 md:pt-0">
+<!-- TopAppBar Mobile -->
+<header class="md:hidden fixed z-50 flex justify-between items-center w-full px-margin-mobile h-16 bg-primary text-on-primary font-headline-md text-headline-md docked full-width top-0 border-b border-outline shadow-none">
+<button aria-label="Menu" class="p-2 -ml-2 text-on-primary transition-colors duration-200 hover:bg-primary-container/20 rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="font-headline-md text-headline-md font-bold text-on-primary">
+            BEACON CAPITAL
+        </div>
+<button aria-label="Logout" class="p-2 -mr-2 text-on-primary transition-colors duration-200 hover:bg-primary-container/20 rounded-full">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</button>
+</header>
+<div class="flex flex-1 relative max-w-[1200px] mx-auto w-full md:px-margin-desktop md:py-margin-desktop">
+<!-- NavigationDrawer Desktop -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 bg-surface-container-low h-full w-80 left-0 border-r border-outline shadow-none transition-all duration-200 ease-in-out mr-gutter">
+<div class="p-6 border-b border-outline">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-6">
+                    BEACON CAPITAL
+                </div>
+<div class="font-headline-md text-headline-md font-bold text-primary text-sm uppercase tracking-wider">
+                    ADMIN CONSOLE
+                </div>
+</div>
+<nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+<a class="flex items-center px-4 py-3 rounded-lg bg-primary text-on-primary font-bold hover:bg-primary/90 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Ledger Management</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Client Accounts</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="security">security</span>
+<span class="font-body-md text-body-md">Risk Assessment</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="history_edu">history_edu</span>
+<span class="font-body-md text-body-md">Audit Logs</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 w-full flex flex-col gap-lg px-margin-mobile md:px-0">
+<!-- Welcome Hero -->
+<section class="bg-surface-container-lowest border border-surface-dim rounded-DEFAULT p-6 premium-shadow relative overflow-hidden mt-6 md:mt-0">
+<div class="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-sm">Welcome Back, Alexander</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Total Aggregated Balance</p>
+<div class="font-display-lg text-display-lg text-primary font-bold tracking-tight">
+                            $28,800.75
+                        </div>
+</div>
+<!-- Quick Actions Grid within Hero -->
+<div class="grid grid-cols-4 gap-xs md:gap-sm bg-surface-container p-2 rounded-lg border border-surface-dim self-start w-full md:w-auto">
+<button class="flex flex-col items-center justify-center p-3 rounded hover:bg-surface-container-highest transition-colors group">
+<span class="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform" data-icon="swap_horiz">swap_horiz</span>
+<span class="font-label-sm text-label-sm text-on-surface">Transfer</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded hover:bg-surface-container-highest transition-colors group">
+<span class="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform" data-icon="send_money">send_money</span>
+<span class="font-label-sm text-label-sm text-on-surface">Zelle</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded hover:bg-surface-container-highest transition-colors group">
+<span class="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-sm text-label-sm text-on-surface">Bill Pay</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded hover:bg-surface-container-highest transition-colors group">
+<span class="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform" data-icon="add_circle">add_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface">Deposit</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Accounts Stack -->
+<section class="flex flex-col gap-sm">
+<h2 class="font-headline-md text-headline-md text-on-background border-b border-surface-dim pb-sm mb-xs">Your Accounts</h2>
+<!-- Checking -->
+<div class="bg-surface-container-lowest border border-surface-dim rounded-DEFAULT p-4 md:p-6 hover:border-primary transition-colors cursor-pointer group flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-background">Beacon Premier Checking</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">...3409</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md font-bold text-on-background">$4,250.80</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Available Balance</p>
+</div>
+</div>
+<!-- Savings -->
+<div class="bg-surface-container-lowest border border-surface-dim rounded-DEFAULT p-4 md:p-6 hover:border-primary transition-colors cursor-pointer group flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-background">Beacon High-Yield Savings</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">...9921</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md font-bold text-on-background">$24,890.15</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Available Balance</p>
+</div>
+</div>
+<!-- Credit Card -->
+<div class="bg-surface-container-lowest border border-surface-dim rounded-DEFAULT p-4 md:p-6 hover:border-primary transition-colors cursor-pointer group flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-background">Beacon Signature Rewards</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">...5510</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md font-bold text-primary">-$340.20</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Current Balance</p>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- BottomNavBar Mobile -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center bg-surface px-2 py-3 docked full-width bottom-0 border-t border-outline bg-surface text-primary font-label-sm text-label-sm shadow-none">
+<a class="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_balance">account_balance</span>
+<span>Accounts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="payments">payments</span>
+<span>Pay &amp; Transfer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="trending_up">trending_up</span>
+<span>Brokerage</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high scale-95 active:scale-90 transition-transform p-2 rounded-lg w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="menu">menu</span>
+<span>Menu</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Work Sans', sans-serif;
+  background-color: #F5F5F5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+
+.premium-shadow {
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.08);
+}
+
+.shadow-architectural {
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Component Shortcuts from Design Theme */
+.data-card { 
+  background-color: #FFFFFF; 
+  border: 1px solid #E2E2E2; 
+}
+.data-input { 
+  border: 1px solid #E2E2E2; 
+  border-radius: 0px !important;
+}
+.data-input:focus { 
+  border-color: #af0017; 
+  outline: none; 
+}
+.btn-primary { 
+  background-color: #af0017; 
+  color: #ffffff; 
+  border-radius: 0px !important;
+  transition: background-color 0.2s;
+}
+.btn-primary:hover { 
+  background-color: #d71e28; 
+}
+.btn-secondary { 
+  border: 2px solid #af0017; 
+  color: #af0017; 
+  background-color: transparent; 
+  border-radius: 0px !important;
+  transition: background-color 0.2s;
+}
+.btn-secondary:hover { 
+  background-color: rgba(175, 0, 23, 0.05); 
+}
