@@ -48,6 +48,10 @@ function TransferFundsContent() {
         return;
       }
       const data = await res.json();
+      if (data.user?.status === "Pending" || data.user?.status === "Rejected") {
+        router.push("/dashboard");
+        return;
+      }
       setUser(data.user);
       setAccounts(data.accounts);
       if (data.accounts.length > 0) {

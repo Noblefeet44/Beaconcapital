@@ -8,7 +8,7 @@ interface UserWithAccounts extends User {
   accounts: Account[];
 }
 
-type TabType = "overview" | "pending" | "users" | "profile";
+type TabType = "overview" | "applicants" | "pending" | "users" | "profile";
 
 export default function AdminConsole() {
   const router = useRouter();
@@ -19,6 +19,19 @@ export default function AdminConsole() {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Applicant Review States
+  const [rejectingApplicant, setRejectingApplicant] = useState<UserWithAccounts | null>(null);
+  const [applicantRejectionReason, setApplicantRejectionReason] = useState("");
+  const [emailDispatchData, setEmailDispatchData] = useState<{
+    recipient: string;
+    recipientName: string;
+    subject: string;
+    body: string;
+    action: "approve" | "reject";
+  } | null>(null);
+  const [statusActionLoading, setStatusActionLoading] = useState(false);
+  const [applicantFilter, setApplicantFilter] = useState<"pending" | "all" | "approved" | "rejected">("pending");
 
   // Freeze form states
   const [isFrozenInput, setIsFrozenInput] = useState(false);
@@ -81,6 +94,31 @@ export default function AdminConsole() {
     setAdjustDate(today);
     setAdjustTime(new Date().toLocaleTimeString("en-US", { hour12: false }));
   }, []);
+
+  const handleApplicantStatus = async (userId: string, action: "approve" | "reject", reason: string = "") => {
+    setStatusActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/users/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update applicant status");
+
+      if (data.emailDetails) {
+        setEmailDispatchData({ ...data.emailDetails, action });
+      }
+
+      setRejectingApplicant(null);
+      setApplicantRejectionReason("");
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message || "An error occurred");
+    } finally {
+      setStatusActionLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -203,6 +241,7 @@ export default function AdminConsole() {
   }
 
   const totalCustomers = users.length;
+  const pendingApplicantsCount = users.filter((u) => u.status === "Pending").length;
   const pendingTransactions = allTransactions.filter((t) => t.status === "Pending" && t.title !== "Wire Transfer Fee");
   const pendingApprovalsCount = pendingTransactions.length;
   const totalCash = users.reduce((sum, u) => sum + (u.accounts.find((a) => a.accountType === "checking")?.balance || 0), 0);
@@ -230,6 +269,7 @@ export default function AdminConsole() {
           <p className="text-[#546E7A] text-[10px] uppercase font-bold tracking-wider px-3 mb-3">Operations</p>
           {([
             { tab: "overview" as TabType, icon: "dashboard", label: "Overview" },
+            { tab: "applicants" as TabType, icon: "badge", label: "Applicant Approvals", badge: pendingApplicantsCount },
             { tab: "pending" as TabType, icon: "hourglass_empty", label: "Pending Transfers", badge: pendingApprovalsCount },
             { tab: "users" as TabType, icon: "group", label: "User Management", badge: totalCustomers },
           ]).map(({ tab, icon, label, badge }) => (
@@ -361,9 +401,13 @@ export default function AdminConsole() {
                     <p className="text-sm text-[#90A4AE]">Fast links to manage clients and resolve pending wires.</p>
                   </div>
                   <div className="space-y-3 mt-6">
-                    <button onClick={() => setActiveTab("pending")} className="w-full bg-[#af0017] text-white hover:bg-[#8f0013] py-3 px-4 font-bold text-xs uppercase tracking-wider rounded-none transition-colors flex items-center justify-center gap-2">
+                    <button onClick={() => setActiveTab("applicants")} className="w-full bg-[#af0017] text-white hover:bg-[#8f0013] py-3 px-4 font-bold text-xs uppercase tracking-wider rounded-none transition-colors flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-sm">badge</span>
+                      <span>Review Applicants ({pendingApplicantsCount})</span>
+                    </button>
+                    <button onClick={() => setActiveTab("pending")} className="w-full bg-[#1E293B] text-white hover:bg-[#2D3F59] py-3 px-4 font-bold text-xs uppercase tracking-wider rounded-none border border-[#334155] transition-colors flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined text-sm">hourglass_empty</span>
-                      <span>Pending ({pendingApprovalsCount})</span>
+                      <span>Pending Wires ({pendingApprovalsCount})</span>
                     </button>
                     <button onClick={() => setActiveTab("users")} className="w-full bg-[#1E293B] text-white hover:bg-[#2D3F59] py-3 px-4 font-bold text-xs uppercase tracking-wider rounded-none border border-[#334155] transition-colors flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined text-sm">group</span>
@@ -372,6 +416,162 @@ export default function AdminConsole() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* APPLICANT APPROVALS TAB */}
+          {activeTab === "applicants" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">Applicant Verification &amp; Approvals</h2>
+                  <p className="text-sm text-[#90A4AE] mt-1">Review background information submitted by new client applicants. Approve or reject with compliance details.</p>
+                </div>
+                <div className="flex items-center gap-2 bg-[#131924] p-1 border border-[#1C2433]">
+                  {(["pending", "all", "approved", "rejected"] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setApplicantFilter(filter)}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+                        applicantFilter === filter
+                          ? "bg-[#af0017] text-white"
+                          : "text-[#90A4AE] hover:text-white"
+                      }`}
+                    >
+                      {filter}
+                      {filter === "pending" && ` (${pendingApplicantsCount})`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Applicant Cards List */}
+              {(() => {
+                const filteredApplicants = users.filter((u) => {
+                  if (applicantFilter === "pending") return u.status === "Pending";
+                  if (applicantFilter === "approved") return u.status === "Active";
+                  if (applicantFilter === "rejected") return u.status === "Rejected" || u.status === "Suspended";
+                  return true;
+                });
+
+                if (filteredApplicants.length === 0) {
+                  return (
+                    <div className="bg-[#131924] border border-[#1C2433] p-12 text-center rounded-none">
+                      <span className="material-symbols-outlined text-[64px] text-[#546E7A]">assignment_turned_in</span>
+                      <h3 className="text-lg font-bold text-white mt-4">No Applicants Found</h3>
+                      <p className="text-sm text-[#90A4AE] mt-2">There are currently no applicant applications matching the selected filter ({applicantFilter}).</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 gap-6">
+                    {filteredApplicants.map((applicant) => (
+                      <div key={applicant.id} className="bg-[#131924] border border-[#1C2433] p-6 rounded-none space-y-6">
+                        {/* Header Row */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1C2433]">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#af0017] text-white flex items-center justify-center font-bold text-lg rounded-none">
+                              {((applicant.firstName?.[0] || "") + (applicant.lastName?.[0] || "")).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-white">{applicant.firstName} {applicant.lastName}</h3>
+                                {applicant.status === "Pending" && (
+                                  <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
+                                    Pending Review
+                                  </span>
+                                )}
+                                {applicant.status === "Active" && (
+                                  <span className="bg-green-500/10 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
+                                    Approved / Active
+                                  </span>
+                                )}
+                                {(applicant.status === "Rejected" || applicant.status === "Suspended") && (
+                                  <span className="bg-red-500/10 text-red-400 border border-red-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
+                                    {applicant.status === "Rejected" ? "Rejected" : "Suspended"}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-[#90A4AE] mt-0.5">{applicant.username} · Joined {new Date(applicant.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleApplicantStatus(applicant.id, "approve")}
+                              disabled={statusActionLoading}
+                              className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-none flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-base">check_circle</span>
+                              <span>Approve Applicant</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setRejectingApplicant(applicant);
+                                setApplicantRejectionReason("");
+                              }}
+                              disabled={statusActionLoading}
+                              className="bg-[#C62828] hover:bg-[#B71C1C] text-white px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-none flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-base">cancel</span>
+                              <span>Reject Applicant</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Background Verification Information Grid */}
+                        <div>
+                          <p className="text-xs text-[#546E7A] uppercase font-bold tracking-wider mb-3">Submitted Verification Information</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#0E131F] p-4 border border-[#1C2433]">
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">Phone Number</p>
+                              <p className="text-sm font-semibold text-white mt-0.5">{applicant.phone || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">Date of Birth</p>
+                              <p className="text-sm font-semibold text-white mt-0.5">{applicant.dob || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">ID Type</p>
+                              <p className="text-sm font-semibold text-white mt-0.5 uppercase">{applicant.idType || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">ID Number</p>
+                              <p className="text-sm font-mono font-semibold text-white mt-0.5">{applicant.idNumber || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">State / Country</p>
+                              <p className="text-sm font-semibold text-white mt-0.5">{applicant.issuance || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">Expiry Date</p>
+                              <p className="text-sm font-semibold text-white mt-0.5">{applicant.expiry || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">Initial Checking Balance</p>
+                              <p className="text-sm font-mono font-semibold text-green-400 mt-0.5">$0.00</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#90A4AE] uppercase font-semibold">Initial Savings Balance</p>
+                              <p className="text-sm font-mono font-semibold text-blue-400 mt-0.5">$0.00</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {(applicant.rejectionReason || applicant.frozenReason) && (applicant.status === "Rejected" || applicant.status === "Suspended") && (
+                          <div className="bg-red-900/10 border border-red-500/40 p-4 text-xs text-red-300">
+                            <p className="font-bold uppercase tracking-wider text-red-400">Rejection Stated Reason:</p>
+                            <p className="mt-1 font-semibold">{applicant.rejectionReason || applicant.frozenReason}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -883,6 +1083,112 @@ export default function AdminConsole() {
 
         </main>
       </div>
+
+      {/* Rejection Reason Modal */}
+      {rejectingApplicant && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-[#131924] border border-[#1C2433] max-w-lg w-full p-6 shadow-2xl">
+            <div className="flex justify-between items-center pb-4 border-b border-[#1C2433] mb-4">
+              <h3 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span className="material-symbols-outlined text-red-500">cancel</span>
+                <span>Reject Application</span>
+              </h3>
+              <button onClick={() => setRejectingApplicant(null)} className="text-[#90A4AE] hover:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-[#90A4AE] mb-4">
+              You are rejecting the account application for <strong className="text-white">{rejectingApplicant.firstName} {rejectingApplicant.lastName}</strong> ({rejectingApplicant.username}).
+              Please enter the specific rejection reason below. This will be sent to the customer via email notification.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleApplicantStatus(rejectingApplicant.id, "reject", applicantRejectionReason);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-[#90A4AE] uppercase tracking-wide mb-1">
+                  Rejection Reason (Stated to Customer)
+                </label>
+                <textarea
+                  value={applicantRejectionReason}
+                  onChange={(e) => setApplicantRejectionReason(e.target.value)}
+                  placeholder="e.g. Identity documentation mismatch or unreadable ID uploaded..."
+                  className="w-full bg-[#0D121B] border border-[#1C2433] text-white p-3 text-sm focus:outline-none focus:border-[#af0017] min-h-[100px] rounded-none"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2 border-t border-[#1C2433]">
+                <button
+                  type="button"
+                  onClick={() => setRejectingApplicant(null)}
+                  className="bg-[#1E293B] hover:bg-[#334155] text-white px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={statusActionLoading}
+                  className="bg-[#C62828] hover:bg-[#B71C1C] text-white px-5 py-2 font-bold text-xs uppercase tracking-wider rounded-none disabled:opacity-50"
+                >
+                  {statusActionLoading ? "Processing..." : "Confirm Rejection"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Simulated Email Dispatch Modal */}
+      {emailDispatchData && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+          <div className="bg-[#0E131F] border border-[#2B3A4F] max-w-xl w-full p-6 shadow-2xl rounded-none">
+            <div className="flex justify-between items-center pb-4 border-b border-[#1C2433] mb-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-green-400">mark_email_read</span>
+                <h3 className="text-base font-bold text-white uppercase tracking-wider">
+                  Email Notification Dispatched
+                </h3>
+              </div>
+              <button onClick={() => setEmailDispatchData(null)} className="text-[#90A4AE] hover:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="bg-[#131924] border border-[#1C2433] p-4 font-mono text-xs space-y-2 mb-5">
+              <div className="flex justify-between">
+                <span className="text-[#546E7A] font-bold uppercase">To:</span>
+                <span className="text-white font-semibold">{emailDispatchData.recipientName} &lt;{emailDispatchData.recipient}&gt;</span>
+              </div>
+              <div className="flex justify-between border-t border-[#1C2433] pt-2">
+                <span className="text-[#546E7A] font-bold uppercase">Status:</span>
+                <span className={`font-bold ${emailDispatchData.action === "approve" ? "text-green-400" : "text-red-400"}`}>
+                  {emailDispatchData.action === "approve" ? "APPROVED EMAIL SENT" : "REJECTION EMAIL SENT"}
+                </span>
+              </div>
+              <div className="border-t border-[#1C2433] pt-2">
+                <span className="text-[#546E7A] font-bold uppercase block mb-1">Subject:</span>
+                <span className="text-amber-400 font-semibold">{emailDispatchData.subject}</span>
+              </div>
+              <div className="border-t border-[#1C2433] pt-2 whitespace-pre-wrap text-[#90A4AE]">
+                {emailDispatchData.body}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setEmailDispatchData(null)}
+              className="w-full bg-[#af0017] hover:bg-[#8f0013] text-white py-2.5 font-bold text-xs uppercase tracking-wider rounded-none"
+            >
+              Close &amp; Return to Console
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

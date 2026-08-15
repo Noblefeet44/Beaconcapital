@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendEmail } from "@/lib/resend";
+import {
+  getDepositSettledEmail,
+  getTransferSettledEmail,
+  getTransferRejectedEmail,
+} from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,6 +44,63 @@ export async function POST(req: NextRequest) {
       );
       for (const assoc of associated) {
         await db.updateTransactionStatus(assoc.id, newStatus);
+      }
+    }
+
+    // Send email notification to account owner
+    const targetAccount = await db.getAccountById(targetTx.accountId);
+    if (targetAccount) {
+      const ownerUser = await db.getUserById(targetAccount.userId);
+      if (ownerUser) {
+        const isDeposit = targetTx.title.toLowerCase().includes("deposit");
+        if (action === "approve") {
+          if (isDeposit) {
+            await sendEmail({
+              to: ownerUser.username,
+              from: process.env.SENDER_PAYMENTS,
+              subject: `Deposit Cleared - Ref: ${targetTx.authCode || targetTx.id}`,
+              templateName: "deposit_settled",
+              userId: ownerUser.id,
+              html: getDepositSettledEmail({
+                userName: `${ownerUser.firstName} ${ownerUser.lastName}`,
+                targetAccountMask: targetAccount.accountNumber.slice(-4),
+                amount: Math.abs(targetTx.amount),
+                referenceNumber: targetTx.authCode || targetTx.id,
+              }),
+            });
+          } else {
+            await sendEmail({
+              to: ownerUser.username,
+              from: process.env.SENDER_PAYMENTS,
+              subject: `Transfer Completed - Ref: ${targetTx.authCode || targetTx.id}`,
+              templateName: "transfer_settled",
+              userId: ownerUser.id,
+              html: getTransferSettledEmail({
+                userName: `${ownerUser.firstName} ${ownerUser.lastName}`,
+                transferType: targetTx.title,
+                amount: Math.abs(targetTx.amount),
+                recipientName: targetTx.recipientDetails || targetTx.title,
+                referenceNumber: targetTx.authCode || targetTx.id,
+                date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+              }),
+            });
+          }
+        } else {
+          await sendEmail({
+            to: ownerUser.username,
+            from: process.env.SENDER_PAYMENTS,
+            subject: `Transfer Declined - Ref: ${targetTx.authCode || targetTx.id}`,
+            templateName: "transfer_rejected",
+            userId: ownerUser.id,
+            html: getTransferRejectedEmail({
+              userName: `${ownerUser.firstName} ${ownerUser.lastName}`,
+              transferType: targetTx.title,
+              amount: Math.abs(targetTx.amount),
+              referenceNumber: targetTx.authCode || targetTx.id,
+              reason: "Transaction declined during compliance verification review",
+            }),
+          });
+        }
       }
     }
 

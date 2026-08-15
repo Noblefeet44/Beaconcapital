@@ -25,6 +25,10 @@ function TransactionHistoryContent() {
         throw new Error("Unauthorized");
       }
       const profileData = await profileRes.json();
+      if (profileData.user?.status === "Pending" || profileData.user?.status === "Rejected") {
+        router.push("/dashboard");
+        return;
+      }
       setUser(profileData.user);
       setAccounts(profileData.accounts);
 

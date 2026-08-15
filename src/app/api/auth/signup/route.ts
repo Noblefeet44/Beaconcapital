@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signToken } from "@/lib/auth";
+import { sendEmail } from "@/lib/resend";
+import {
+  getApplicationSubmittedEmail,
+  getAdminNewApplicantEmail,
+} from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,9 +59,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
 
-    // Auto-create initial checking and savings accounts with mock balances for demo
-    await db.createAccount(user.id, "Beacon Premier Checking", "checking", 1500.00);
-    await db.createAccount(user.id, "Beacon High-Yield Savings", "savings", 10000.00);
+    // Auto-create initial checking and savings accounts with 0.00 balance
+    await db.createAccount(user.id, "Beacon Premier Checking", "checking", 0.00);
+    await db.createAccount(user.id, "Beacon High-Yield Savings", "savings", 0.00);
+
+    // Send Application Submitted Email to Applicant
+    const fullName = `${user.firstName} ${user.lastName}`;
+    await sendEmail({
+      to: user.username,
+      from: process.env.SENDER_SUPPORT || "Beacon Capital Support <support@beaconcapital.site>",
+      subject: "Application Submitted - Beacon Capital Onboarding",
+      templateName: "application_submitted",
+      userId: user.id,
+      html: getApplicationSubmittedEmail(fullName),
+    });
+
+    // Send Internal Compliance Alert to Admin Team
+    await sendEmail({
+      to: process.env.ADMIN_ALERT_EMAIL || "compliance@beaconcapital.site",
+      from: process.env.SENDER_SUPPORT || "Beacon Capital Support <support@beaconcapital.site>",
+      subject: `[COMPLIANCE ALERT] New Account Application: ${fullName}`,
+      templateName: "admin_new_applicant_alert",
+      html: getAdminNewApplicantEmail(fullName, user.username),
+    });
 
     // Set secure cookie
     const token = signToken({
@@ -73,6 +98,7 @@ export async function POST(req: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        status: user.status,
       },
     });
 

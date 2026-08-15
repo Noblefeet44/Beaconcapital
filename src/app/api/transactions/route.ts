@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendEmail } from "@/lib/resend";
+import {
+  getTransferInitiatedEmail,
+  getDepositReceivedPendingEmail,
+  getAdminHighValueTxEmail,
+} from "@/lib/email-templates";
 
 export async function GET(req: NextRequest) {
   try {
@@ -186,6 +192,45 @@ export async function POST(req: NextRequest) {
         year: "numeric"
       });
 
+      // Send itemized confirmation email
+      if (dbUser) {
+        await sendEmail({
+          to: dbUser.username,
+          from: process.env.SENDER_PAYMENTS,
+          subject: `${transferType === "wire" ? "Wire Transfer" : "ACH Transfer"} Confirmation - Ref: ${refNumber}`,
+          templateName: "transfer_initiated",
+          userId: user.id,
+          metadata: { refNumber, amount: parsedAmount, transferType },
+          html: getTransferInitiatedEmail({
+            userName: `${dbUser.firstName} ${dbUser.lastName}`,
+            transferType: transferType === "wire" ? "Wire Transfer" : "ACH Transfer",
+            amount: parsedAmount,
+            fee,
+            recipientName,
+            recipientDetails: `Bank: ${bankName}, Routing: ${routingNumber}, Acct: ****${accountNumber.slice(-4)}`,
+            sendingAccountMask: srcAcc.accountNumber.slice(-4),
+            referenceNumber: refNumber,
+            date: `${dateFormatted} ${timeFormatted}`,
+          }),
+        });
+
+        // Trigger High-Value Alert if amount >= $10,000
+        if (parsedAmount >= 10000) {
+          await sendEmail({
+            to: process.env.ADMIN_ALERT_EMAIL || "compliance@beaconcapital.site",
+            from: process.env.SENDER_SECURITY || "Beacon Capital Security <security@beaconcapital.site>",
+            subject: `[COMPLIANCE ALERT] High-Value Transfer Submitted: ${refNumber}`,
+            templateName: "admin_high_value_tx_alert",
+            html: getAdminHighValueTxEmail({
+              userName: `${dbUser.firstName} ${dbUser.lastName}`,
+              transferType: transferType === "wire" ? "Wire Transfer" : "ACH Transfer",
+              amount: parsedAmount,
+              referenceNumber: refNumber,
+            }),
+          });
+        }
+      }
+
       return NextResponse.json({
         success: true,
         referenceNumber: refNumber,
@@ -229,6 +274,25 @@ export async function POST(req: NextRequest) {
         authCode: refNumber,
       });
 
+      if (dbUser) {
+        await sendEmail({
+          to: dbUser.username,
+          from: process.env.SENDER_PAYMENTS,
+          subject: `Zelle Transfer Confirmation - Ref: ${refNumber}`,
+          templateName: "zelle_initiated",
+          userId: user.id,
+          html: getTransferInitiatedEmail({
+            userName: `${dbUser.firstName} ${dbUser.lastName}`,
+            transferType: "Zelle Transfer",
+            amount: parsedAmount,
+            recipientName: recipient,
+            sendingAccountMask: srcAcc.accountNumber.slice(-4),
+            referenceNumber: refNumber,
+            date: new Date().toLocaleString("en-US"),
+          }),
+        });
+      }
+
       return NextResponse.json({ success: true, referenceNumber: refNumber });
     }
 
@@ -259,6 +323,25 @@ export async function POST(req: NextRequest) {
         recipientDetails: `Biller: ${biller}`,
         authCode: refNumber,
       });
+
+      if (dbUser) {
+        await sendEmail({
+          to: dbUser.username,
+          from: process.env.SENDER_PAYMENTS,
+          subject: `Bill Payment Confirmation - Ref: ${refNumber}`,
+          templateName: "billpay_initiated",
+          userId: user.id,
+          html: getTransferInitiatedEmail({
+            userName: `${dbUser.firstName} ${dbUser.lastName}`,
+            transferType: "Bill Payment",
+            amount: parsedAmount,
+            recipientName: biller,
+            sendingAccountMask: srcAcc.accountNumber.slice(-4),
+            referenceNumber: refNumber,
+            date: new Date().toLocaleString("en-US"),
+          }),
+        });
+      }
 
       return NextResponse.json({ success: true, referenceNumber: refNumber });
     }
@@ -298,6 +381,24 @@ export async function POST(req: NextRequest) {
         day: "2-digit",
         year: "numeric"
       });
+
+      if (dbUser) {
+        await sendEmail({
+          to: dbUser.username,
+          from: process.env.SENDER_PAYMENTS,
+          subject: `Mobile Check Deposit Received - Ref: ${refNumber}`,
+          templateName: "deposit_received_pending",
+          userId: user.id,
+          html: getDepositReceivedPendingEmail({
+            userName: `${dbUser.firstName} ${dbUser.lastName}`,
+            targetAccountName: destAcc.accountName,
+            targetAccountMask: destAcc.accountNumber.slice(-4),
+            amount: parsedAmount,
+            referenceNumber: refNumber,
+            date: `${dateFormatted} ${timeFormatted}`,
+          }),
+        });
+      }
 
       return NextResponse.json({
         success: true,

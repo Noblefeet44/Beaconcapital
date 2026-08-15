@@ -120,11 +120,26 @@ export default function AccountDashboard() {
     }
   };
 
+  const checkRestriction = () => {
+    if (!user) return false;
+    if (user.status === "Pending") {
+      return "Transaction declined. Your account application is currently pending background verification by Customer Service.";
+    }
+    if (user.status === "Rejected") {
+      return `Transaction declined. Application rejected: ${user.rejectionReason || user.frozenReason || "Background verification not approved"}`;
+    }
+    if (user.isFrozen) {
+      return `Transaction declined. Your account is frozen: ${user.frozenReason}`;
+    }
+    return false;
+  };
+
   const openDrawerModal = (modal: "zelle" | "billpay") => {
     setDrawerOpen(false);
     setTransferExpanded(false);
-    if (user?.isFrozen) {
-      alert(`Transaction declined. Your account is frozen: ${user.frozenReason}`);
+    const restriction = checkRestriction();
+    if (restriction) {
+      alert(restriction);
       return;
     }
     setModalError("");
@@ -151,6 +166,187 @@ export default function AccountDashboard() {
           </span>
           <p className="font-body-md text-body-md text-on-surface-variant mt-sm">Establishing Secure Connection...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Dedicated Pending Application Screen
+  if (user?.status === "Pending") {
+    return (
+      <div className="min-h-screen bg-[#0B0E14] text-white flex flex-col font-sans antialiased">
+        {/* Header */}
+        <header className="w-full bg-[#0E131F] border-b border-[#1C2433] px-6 py-4 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#af0017] text-2xl">account_balance</span>
+            <div>
+              <span className="font-bold text-lg text-white tracking-wider uppercase block">BEACON CAPITAL</span>
+              <span className="text-[10px] text-[#af0017] uppercase tracking-widest font-semibold font-mono block -mt-1">Client Portal</span>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-[#1A2332] hover:bg-red-900/40 hover:text-red-400 text-[#90A4AE] px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors border border-[#2A374A] rounded-none"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            <span>Sign Out</span>
+          </button>
+        </header>
+
+        {/* Dedicated Main Section */}
+        <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+          <div className="max-w-2xl w-full bg-[#131924] border-2 border-[#FFA000] p-6 md:p-12 shadow-2xl space-y-8 text-center rounded-none">
+            {/* Animated Icon */}
+            <div className="w-20 h-20 bg-[#FFF8E1]/10 border border-[#FFA000]/40 text-[#FFA000] flex items-center justify-center mx-auto rounded-none shadow-lg">
+              <span className="material-symbols-outlined text-[48px] animate-pulse">
+                hourglass_top
+              </span>
+            </div>
+
+            <div>
+              <span className="inline-block bg-[#FFA000]/20 text-[#FFB74D] border border-[#FFA000]/40 text-[11px] font-bold px-3 py-1 uppercase tracking-widest mb-3 rounded-none">
+                Application Status: Pending Verification
+              </span>
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                Account Application Under Review
+              </h1>
+              <p className="text-[#90A4AE] text-sm md:text-base mt-3 max-w-lg mx-auto">
+                Welcome, <strong className="text-white font-semibold">{user?.firstName} {user?.lastName}</strong>! Your background verification and identity information are currently being reviewed by Customer Service &amp; Compliance.
+              </p>
+            </div>
+
+            {/* Verification Progress Timeline */}
+            <div className="bg-[#0E131F] border border-[#1C2433] p-6 text-left space-y-4 rounded-none">
+              <h3 className="font-bold text-xs uppercase text-[#af0017] tracking-wider border-b border-[#1C2433] pb-2">
+                Verification Progress Timeline
+              </h3>
+
+              <div className="space-y-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-[#2E7D32] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 rounded-none">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-bold text-white">Application Received</p>
+                    <p className="text-xs text-[#90A4AE]">Personal and background documentation successfully submitted.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-[#F57C00] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 animate-pulse rounded-none">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#FFB74D]">Customer Service &amp; Compliance Verification (In Progress)</p>
+                    <p className="text-xs text-[#90A4AE]">Compliance officers are validating your information.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 opacity-60">
+                  <div className="w-6 h-6 bg-[#1C2433] text-[#90A4AE] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 rounded-none">
+                    3
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#90A4AE]">Account Approval &amp; Email Notification</p>
+                    <p className="text-xs text-[#546E7A]">An official approval email will be sent to <span className="font-semibold text-[#90A4AE]">{user?.email || user?.username}</span>.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Information Notice */}
+            <div className="bg-[#FFA000]/10 border border-[#FFA000]/30 p-4 text-xs text-[#FFB74D] text-left flex items-start gap-3 rounded-none">
+              <span className="material-symbols-outlined text-[#FFA000] text-xl shrink-0 mt-0.5">info</span>
+              <div>
+                <p className="font-bold text-white">Next Steps:</p>
+                <p className="mt-0.5 text-[#90A4AE]">Please check back later or monitor your email inbox. Once Customer Service approves your application, log back in to access your active accounts and dashboard balances.</p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 border-t border-[#1C2433]">
+              <button
+                onClick={fetchDashboardData}
+                className="bg-[#af0017] hover:bg-[#8f0013] text-white px-6 py-3 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded-none"
+              >
+                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span>Refresh Application Status</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-[#1E293B] hover:bg-[#334155] text-white border border-[#334155] px-6 py-3 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded-none"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Dedicated Rejected Application Screen
+  if (user?.status === "Rejected") {
+    return (
+      <div className="min-h-screen bg-[#0B0E14] text-white flex flex-col font-sans antialiased">
+        <header className="w-full bg-[#0E131F] border-b border-[#1C2433] px-6 py-4 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#af0017] text-2xl">account_balance</span>
+            <div>
+              <span className="font-bold text-lg text-white tracking-wider uppercase block">BEACON CAPITAL</span>
+              <span className="text-[10px] text-[#af0017] uppercase tracking-widest font-semibold font-mono block -mt-1">Client Portal</span>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-[#1A2332] hover:bg-red-900/40 hover:text-red-400 text-[#90A4AE] px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors border border-[#2A374A] rounded-none"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            <span>Sign Out</span>
+          </button>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+          <div className="max-w-2xl w-full bg-[#131924] border-2 border-red-600 p-6 md:p-12 shadow-2xl space-y-8 text-center rounded-none">
+            <div className="w-20 h-20 bg-red-950/40 border border-red-500/40 text-red-500 flex items-center justify-center mx-auto rounded-none shadow-lg">
+              <span className="material-symbols-outlined text-[48px]">
+                cancel
+              </span>
+            </div>
+
+            <div>
+              <span className="inline-block bg-red-900/30 text-red-400 border border-red-500/40 text-[11px] font-bold px-3 py-1 uppercase tracking-widest mb-3 rounded-none">
+                Application Status: Rejected
+              </span>
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                Account Application Not Approved
+              </h1>
+              <p className="text-[#90A4AE] text-sm md:text-base mt-3 max-w-lg mx-auto">
+                Dear <strong className="text-white font-semibold">{user?.firstName} {user?.lastName}</strong>, Customer Service and Compliance have reviewed your background verification application.
+              </p>
+            </div>
+
+            <div className="bg-[#0E131F] border border-red-500/40 p-6 text-left space-y-2 rounded-none">
+              <p className="text-xs uppercase font-bold text-red-400 tracking-wider">Compliance Rejection Stated Reason:</p>
+              <p className="text-sm font-bold text-red-300 font-mono break-words">
+                "{user?.rejectionReason || user?.frozenReason || "Background verification check failed to meet compliance criteria."}"
+              </p>
+              <p className="text-xs text-[#90A4AE] pt-3 border-t border-[#1C2433]">
+                An official rejection notice has been sent to your email address: <span className="font-semibold text-white">{user?.email || user?.username}</span>.
+              </p>
+            </div>
+
+            <div className="flex justify-center pt-4 border-t border-[#1C2433]">
+              <button
+                onClick={handleLogout}
+                className="bg-[#af0017] hover:bg-[#8f0013] text-white px-8 py-3 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded-none"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -442,7 +638,45 @@ export default function AccountDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 w-full flex flex-col gap-lg px-margin-mobile md:px-0">
-          {user?.isFrozen && (
+          {user?.status === "Pending" && (
+            <div className="bg-[#FFF8E1] border-2 border-[#FFA000] text-[#795548] p-5 rounded-none flex items-start gap-4 mt-6 md:mt-0 shadow-sm">
+              <span className="material-symbols-outlined text-[#F57C00] text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                hourglass_top
+              </span>
+              <div>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-[#E65100] uppercase tracking-wider">
+                  Application Pending Customer Service Verification
+                </h3>
+                <p className="font-body-md text-body-md mt-1 font-semibold text-[#BF360C]">
+                  Your background verification and account application are currently under review by Customer Service and Bank Compliance.
+                </p>
+                <p className="font-body-sm text-body-sm text-[#D84315] mt-2">
+                  You will receive an email update as soon as your background verification is approved or if additional information is required. Financial transactions are restricted during the review period.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {user?.status === "Rejected" && (
+            <div className="bg-[#FFEBEE] border-2 border-[#D32F2F] text-[#D32F2F] p-5 rounded-none flex items-start gap-4 mt-6 md:mt-0 shadow-sm">
+              <span className="material-symbols-outlined text-[#D32F2F] text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                cancel
+              </span>
+              <div>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-[#C62828] uppercase tracking-wider">
+                  Account Application Rejected
+                </h3>
+                <p className="font-body-md text-body-md mt-1 font-semibold text-[#D32F2F]">
+                  Reason: <span className="font-bold underline">{user.rejectionReason || user.frozenReason || "Background verification not approved."}</span>
+                </p>
+                <p className="font-body-sm text-body-sm text-[#E53935] mt-2">
+                  Customer Service has reviewed your background verification and rejected the application. An official notification email has been dispatched to your registered email address.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {user?.isFrozen && user?.status !== "Rejected" && (
             <div className="bg-[#FFEBEE] border-2 border-[#D32F2F] text-[#D32F2F] p-5 rounded-none flex items-start gap-4 mt-6 md:mt-0">
               <span className="material-symbols-outlined text-[#D32F2F] text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 warning
@@ -477,11 +711,12 @@ export default function AccountDashboard() {
               {/* Quick Actions Grid within Hero */}
               <div className="grid grid-cols-4 gap-xs md:gap-sm bg-surface-container p-2 rounded-none border border-surface-dim self-start w-full md:w-auto">
                 <Link
-                  href={user?.isFrozen ? "#" : "/dashboard/transfer"}
+                  href={checkRestriction() ? "#" : "/dashboard/transfer"}
                   onClick={(e) => {
-                    if (user?.isFrozen) {
+                    const restriction = checkRestriction();
+                    if (restriction) {
                       e.preventDefault();
-                      alert(`Transaction declined. Your account is frozen: ${user.frozenReason}`);
+                      alert(restriction);
                     }
                   }}
                   className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"
@@ -491,8 +726,9 @@ export default function AccountDashboard() {
                 </Link>
                 <button
                   onClick={() => {
-                    if (user?.isFrozen) {
-                      alert(`Transaction declined. Your account is frozen: ${user.frozenReason}`);
+                    const restriction = checkRestriction();
+                    if (restriction) {
+                      alert(restriction);
                       return;
                     }
                     setActiveModal("zelle");
@@ -506,8 +742,9 @@ export default function AccountDashboard() {
                 </button>
                 <button
                   onClick={() => {
-                    if (user?.isFrozen) {
-                      alert(`Transaction declined. Your account is frozen: ${user.frozenReason}`);
+                    const restriction = checkRestriction();
+                    if (restriction) {
+                      alert(restriction);
                       return;
                     }
                     setActiveModal("billpay");
@@ -520,11 +757,12 @@ export default function AccountDashboard() {
                   <span className="font-label-sm text-label-sm text-on-surface">Bill Pay</span>
                 </button>
                 <Link
-                  href={user?.isFrozen ? "#" : "/dashboard/deposit"}
+                  href={checkRestriction() ? "#" : "/dashboard/deposit"}
                   onClick={(e) => {
-                    if (user?.isFrozen) {
+                    const restriction = checkRestriction();
+                    if (restriction) {
                       e.preventDefault();
-                      alert(`Transaction declined. Your account is frozen: ${user.frozenReason}`);
+                      alert(restriction);
                     }
                   }}
                   className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"

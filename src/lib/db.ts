@@ -13,10 +13,11 @@ export interface User {
   issuance: string;
   expiry: string;
   role: "user" | "admin";
-  status: "Active" | "Pending" | "Suspended";
+  status: "Active" | "Pending" | "Suspended" | "Rejected";
   createdAt: string;
   isFrozen: boolean;
   frozenReason: string;
+  rejectionReason?: string;
 }
 
 export interface Account {
@@ -75,15 +76,39 @@ export const db = {
       ...user,
       id: newId,
       role: "user",
-      status: "Active",
+      status: "Pending",
       isFrozen: false,
       frozenReason: "",
+      rejectionReason: "",
     };
 
     const { data, error } = await supabase.from('users').insert(newUser).select().single();
     if (error) {
       console.error('Error creating user:', error);
       return null;
+    }
+    return data as User;
+  },
+
+  async updateUserStatus(userId: string, status: "Active" | "Pending" | "Suspended" | "Rejected", reason: string = ""): Promise<User | undefined> {
+    const updateData: any = { status };
+    if (status === "Rejected" || status === "Suspended") {
+      updateData.rejectionReason = reason;
+      updateData.frozenReason = reason;
+    } else if (status === "Active") {
+      updateData.rejectionReason = "";
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error updating user status:', error);
+      return undefined;
     }
     return data as User;
   },
