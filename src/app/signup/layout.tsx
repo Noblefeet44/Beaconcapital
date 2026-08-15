@@ -4,6 +4,10 @@ export const metadata: Metadata = {
   title: "Apply Securely - Account Registration",
   description:
     "Apply for a new Beacon Capital account. Join institutional asset managers and private capital clients with secure mobile banking.",
+  robots: {
+    index: false,
+    follow: true,
+  },
   alternates: {
     canonical: "/signup",
   },

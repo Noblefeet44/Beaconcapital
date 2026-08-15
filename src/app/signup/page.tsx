@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PublicHeader from "@/components/public/Header";
+import PublicFooter from "@/components/public/Footer";
 
 export default function ComprehensiveSignupPage() {
   const router = useRouter();
@@ -62,46 +64,37 @@ export default function ComprehensiveSignupPage() {
 
   return (
     <div className="bg-background min-h-screen flex flex-col antialiased">
-      {/* Top Banner */}
-      <header className="bg-primary w-full h-40 flex flex-col items-center justify-center relative shadow-sm">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDIiLz4KPHBhdGggZD0iTTAgMEw4IDhaTTAgOEw4IDBaIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')] opacity-50"></div>
-        <div className="flex items-center gap-3 relative z-10">
-          <span className="material-symbols-outlined text-on-primary" style={{ fontVariationSettings: "'FILL' 1", fontSize: "36px" }}>
-            account_balance
-          </span>
-          <h1 className="font-headline-md text-headline-md font-bold text-on-primary tracking-tight">BEACON CAPITAL</h1>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Main Content Area */}
-      <main className="flex-1 px-margin-mobile md:px-margin-desktop py-lg flex flex-col -mt-10 relative z-20 max-w-[600px] w-full mx-auto gap-md">
+      <main className="flex-1 py-16 px-margin-mobile md:px-margin-desktop max-w-[640px] w-full mx-auto flex flex-col gap-6">
         {/* Application Card */}
-        <div className="bg-surface-container-lowest border border-surface-variant p-md shadow-[0px_4px_8px_rgba(0,0,0,0.04)] w-full">
-          <div className="border-b border-surface-variant pb-sm mb-lg">
-            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-background">Account Application</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-1">Open a Premium Secure Ledger Vault</p>
+        <div className="bg-surface-container-lowest border border-surface-variant p-8 md:p-10 shadow-sm w-full">
+          <div className="border-b border-surface-variant pb-4 mb-6">
+            <h1 className="font-headline-lg text-2xl font-bold text-on-background">Account Application</h1>
+            <p className="font-body-md text-xs text-on-surface-variant mt-1">Open a Premium Secure Institutional Account</p>
           </div>
 
           {error && (
-            <div className="bg-error-container border border-error text-error text-sm p-sm mb-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-error" style={{ fontSize: "20px" }}>
+            <div className="bg-error-container border border-error text-error text-xs p-3 mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-error text-base">
                 error
               </span>
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSignup} className="flex flex-col gap-md">
+          <form onSubmit={handleSignup} className="flex flex-col gap-6">
             {/* Section: Personal Details */}
-            <div className="space-y-sm">
-              <h3 className="font-label-sm text-label-sm text-primary uppercase tracking-wider border-b border-surface-variant pb-xs">
-                1. Personal Details
-              </h3>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="firstName">First Name</label>
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-surface-variant pb-1">
+                1. Personal & Contact Details
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="firstName">First Name</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="firstName"
                     name="firstName"
                     type="text"
@@ -110,10 +103,10 @@ export default function ComprehensiveSignupPage() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="lastName">Last Name</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="lastName">Last Name</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="lastName"
                     name="lastName"
                     type="text"
@@ -123,10 +116,10 @@ export default function ComprehensiveSignupPage() {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-xs">
-                <label className="font-label-sm text-label-sm text-on-surface" htmlFor="username">Email Address (User ID)</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-on-surface" htmlFor="username">Email Address (User ID)</label>
                 <input
-                  className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                  className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                   id="username"
                   name="username"
                   type="email"
@@ -136,11 +129,11 @@ export default function ComprehensiveSignupPage() {
                   onChange={handleChange}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="phone">Phone Number</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="phone">Phone Number</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="phone"
                     name="phone"
                     type="tel"
@@ -150,10 +143,10 @@ export default function ComprehensiveSignupPage() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="dob">Date of Birth</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="dob">Date of Birth</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="dob"
                     name="dob"
                     type="date"
@@ -166,15 +159,15 @@ export default function ComprehensiveSignupPage() {
             </div>
 
             {/* Section: Credentials */}
-            <div className="space-y-sm">
-              <h3 className="font-label-sm text-label-sm text-primary uppercase tracking-wider border-b border-surface-variant pb-xs">
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-surface-variant pb-1">
                 2. Security Credentials
-              </h3>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="password">Password</label>
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="password">Password</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="password"
                     name="password"
                     type="password"
@@ -183,10 +176,10 @@ export default function ComprehensiveSignupPage() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="confirmPassword">Confirm Password</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="confirmPassword">Confirm Password</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="confirmPassword"
                     name="confirmPassword"
                     type="password"
@@ -199,15 +192,15 @@ export default function ComprehensiveSignupPage() {
             </div>
 
             {/* Section: ID Verification */}
-            <div className="space-y-sm">
-              <h3 className="font-label-sm text-label-sm text-primary uppercase tracking-wider border-b border-surface-variant pb-xs">
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-surface-variant pb-1">
                 3. Identity Verification
-              </h3>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="idType">ID Type</label>
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="idType">ID Type</label>
                   <select
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="idType"
                     name="idType"
                     required
@@ -220,10 +213,10 @@ export default function ComprehensiveSignupPage() {
                     <option value="passport">Passport</option>
                   </select>
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="idNumber">ID Number</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="idNumber">ID Number</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="idNumber"
                     name="idNumber"
                     type="text"
@@ -233,11 +226,11 @@ export default function ComprehensiveSignupPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="issuance">State/Country of Issuance</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="issuance">Issuing Jurisdiction</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="issuance"
                     name="issuance"
                     type="text"
@@ -246,10 +239,10 @@ export default function ComprehensiveSignupPage() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="font-label-sm text-label-sm text-on-surface" htmlFor="expiry">Expiration Date</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface" htmlFor="expiry">Expiration Date</label>
                   <input
-                    className="w-full px-sm py-sm border border-outline-variant bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-none focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-surface-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary outline-none"
                     id="expiry"
                     name="expiry"
                     type="date"
@@ -263,36 +256,38 @@ export default function ComprehensiveSignupPage() {
 
             {/* Primary Action */}
             <button
-              className="w-full bg-primary text-on-primary font-label-sm text-label-sm py-sm mt-sm hover:bg-primary-container transition-colors duration-200 shadow-sm flex items-center justify-center gap-xs disabled:bg-primary/50"
+              className="w-full bg-primary text-on-primary font-bold text-sm py-3 mt-2 hover:bg-primary-container transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               type="submit"
               disabled={loading}
             >
-              {loading ? "Submitting application..." : "Sign Up Securely"}
+              {loading ? "Submitting Application..." : "Submit Application Securely"}
             </button>
           </form>
         </div>
 
         {/* Secondary Links */}
         <div className="w-full text-center">
-          <p className="font-body-md text-body-md text-on-surface-variant">
+          <p className="text-xs text-on-surface-variant">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary font-bold hover:underline decoration-2">
+            <Link href="/login" className="text-primary font-bold hover:underline">
               Log In
             </Link>
           </p>
         </div>
 
-        {/* Trust Signals */}
-        <div className="w-full mt-lg pt-lg border-t border-surface-variant flex flex-col items-center justify-center text-tertiary gap-xs">
-          <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+        {/* Security Badge */}
+        <div className="flex flex-col items-center justify-center text-xs text-on-surface-variant gap-1 mt-2">
+          <span className="material-symbols-outlined text-primary">
             enhanced_encryption
           </span>
-          <p className="font-label-sm text-label-sm uppercase tracking-wider">256-bit Encrypted Connection</p>
-          <p className="font-body-md text-body-md text-xs mt-xs text-center max-w-[320px]">
+          <p className="font-bold">256-bit SSL Encrypted Connection</p>
+          <p className="text-center text-[11px]">
             Your institutional data is protected by industry-leading security protocols.
           </p>
         </div>
       </main>
+
+      <PublicFooter />
     </div>
   );
 }
