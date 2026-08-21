@@ -44,7 +44,10 @@ export async function sendEmail({
 
     if (error) {
       console.error(`[Resend Error] Failed to send template "${templateName}" to ${to}:`, error);
-      return { success: false, error };
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+        ? (error as any).message
+        : String(error);
+      return { success: false, error: errorMessage };
     }
 
     // 2. Audit log into Supabase email_logs table
@@ -64,8 +67,8 @@ export async function sendEmail({
     }
 
     return { success: true, id: data?.id };
-  } catch (err) {
+  } catch (err: any) {
     console.error(`[Email Exception] ${templateName}:`, err);
-    return { success: false, error: err };
+    return { success: false, error: err?.message || String(err) };
   }
 }
