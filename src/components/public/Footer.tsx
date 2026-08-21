@@ -75,9 +75,22 @@ export default function PublicFooter() {
             </ul>
           </div>
 
-          {/* Client Portal */}
+          {/* Contact Info */}
           <div className="flex flex-col gap-3">
             <h4 className="font-label-sm text-xs font-bold uppercase tracking-wider text-white">
+              Contact Us
+            </h4>
+            <ul className="flex flex-col gap-3 text-sm text-surface-dim">
+              <li className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-base">phone</span>
+                <a href="tel:+15123752360" className="hover:text-white transition-colors">+1 (512) 375-2360</a>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-base">mail</span>
+                <a href="mailto:support@beaconcapital.site" className="hover:text-white transition-colors">support@beaconcapital.site</a>
+              </li>
+            </ul>
+            <h4 className="font-label-sm text-xs font-bold uppercase tracking-wider text-white mt-4">
               Account Access
             </h4>
             <ul className="flex flex-col gap-2 text-sm text-surface-dim">

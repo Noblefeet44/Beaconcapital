@@ -15,3 +15,21 @@ CREATE TABLE IF NOT EXISTS public.email_logs (
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_email_logs_user_id ON public.email_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON public.email_logs(created_at);
+
+-- Row Level Security (RLS)
+ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert to email_logs" ON public.email_logs;
+CREATE POLICY "Allow public insert to email_logs" 
+ON public.email_logs 
+FOR INSERT 
+TO anon, authenticated 
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read of email_logs" ON public.email_logs;
+CREATE POLICY "Allow public read of email_logs" 
+ON public.email_logs 
+FOR SELECT 
+TO anon, authenticated 
+USING (true);
+

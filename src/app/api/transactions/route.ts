@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/resend";
 import {
   getTransferInitiatedEmail,
+  getTransferReceivedEmail,
   getDepositReceivedPendingEmail,
   getAdminHighValueTxEmail,
 } from "@/lib/email-templates";
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
       targetAccountId,
       amount,
       recipient,
+      recipientEmail,
       biller,
       recipientName,
       bankName,
@@ -192,29 +194,28 @@ export async function POST(req: NextRequest) {
         year: "numeric"
       });
 
-      // Send itemized confirmation email
+      // Dispatch email ONLY to the RECEIVER (Sender email disabled per user requirement)
       if (dbUser) {
-        await sendEmail({
-          to: dbUser.username,
-          from: process.env.SENDER_PAYMENTS,
-          subject: `${transferType === "wire" ? "Wire Transfer" : "ACH Transfer"} Confirmation - Ref: ${refNumber}`,
-          templateName: "transfer_initiated",
-          userId: user.id,
-          metadata: { refNumber, amount: parsedAmount, transferType },
-          html: getTransferInitiatedEmail({
-            userName: `${dbUser.firstName} ${dbUser.lastName}`,
-            transferType: transferType === "wire" ? "Wire Transfer" : "ACH Transfer",
-            amount: parsedAmount,
-            fee,
-            recipientName,
-            recipientDetails: `Bank: ${bankName}, Routing: ${routingNumber}, Acct: ****${accountNumber.slice(-4)}`,
-            sendingAccountMask: srcAcc.accountNumber.slice(-4),
-            referenceNumber: refNumber,
-            date: `${dateFormatted} ${timeFormatted}`,
-          }),
-        });
+        const targetReceiverEmail = recipientEmail || (recipient && recipient.includes("@") ? recipient : null);
+        if (targetReceiverEmail && targetReceiverEmail.includes("@")) {
+          await sendEmail({
+            to: targetReceiverEmail.trim(),
+            from: process.env.SENDER_PAYMENTS,
+            subject: `Transfer Notification from ${dbUser.firstName} ${dbUser.lastName} - Ref: ${refNumber}`,
+            templateName: "transfer_received",
+            metadata: { refNumber, amount: parsedAmount, senderName: `${dbUser.firstName} ${dbUser.lastName}` },
+            html: getTransferReceivedEmail({
+              senderName: `${dbUser.firstName} ${dbUser.lastName}`,
+              transferType: transferType === "wire" ? "Wire Transfer" : "ACH Transfer",
+              amount: parsedAmount,
+              recipientName: recipientName || targetReceiverEmail,
+              referenceNumber: refNumber,
+              date: `${dateFormatted} ${timeFormatted}`,
+            }),
+          });
+        }
 
-        // Trigger High-Value Alert if amount >= $10,000
+        // Trigger Compliance Alert if amount >= $10,000
         if (parsedAmount >= 10000) {
           await sendEmail({
             to: process.env.ADMIN_ALERT_EMAIL || "compliance@beaconcapital.site",
@@ -262,6 +263,7 @@ export async function POST(req: NextRequest) {
       }
 
       const refNumber = generateRef("ZEL", "P");
+      const dateStr = new Date().toLocaleString("en-US");
 
       await db.createTransaction({
         accountId: sourceAccountId,
@@ -275,22 +277,24 @@ export async function POST(req: NextRequest) {
       });
 
       if (dbUser) {
-        await sendEmail({
-          to: dbUser.username,
-          from: process.env.SENDER_PAYMENTS,
-          subject: `Zelle Transfer Confirmation - Ref: ${refNumber}`,
-          templateName: "zelle_initiated",
-          userId: user.id,
-          html: getTransferInitiatedEmail({
-            userName: `${dbUser.firstName} ${dbUser.lastName}`,
-            transferType: "Zelle Transfer",
-            amount: parsedAmount,
-            recipientName: recipient,
-            sendingAccountMask: srcAcc.accountNumber.slice(-4),
-            referenceNumber: refNumber,
-            date: new Date().toLocaleString("en-US"),
-          }),
-        });
+        // Dispatch email ONLY to the RECEIVER (Sender email disabled per user requirement)
+        if (recipient && recipient.includes("@")) {
+          await sendEmail({
+            to: recipient.trim(),
+            from: process.env.SENDER_PAYMENTS,
+            subject: `Zelle Transfer Notification from ${dbUser.firstName} ${dbUser.lastName} - Ref: ${refNumber}`,
+            templateName: "zelle_received",
+            metadata: { refNumber, amount: parsedAmount, senderName: `${dbUser.firstName} ${dbUser.lastName}` },
+            html: getTransferReceivedEmail({
+              senderName: `${dbUser.firstName} ${dbUser.lastName}`,
+              transferType: "Zelle Transfer",
+              amount: parsedAmount,
+              recipientName: recipient,
+              referenceNumber: refNumber,
+              date: dateStr,
+            }),
+          });
+        }
       }
 
       return NextResponse.json({ success: true, referenceNumber: refNumber });

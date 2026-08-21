@@ -109,7 +109,19 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-bold text-base text-on-background">Email Support</h3>
                       <p className="text-xs text-on-surface-variant mt-1">
-                        Institutional Advisory: <a href="mailto:advisory@beaconcapital.site" className="text-primary font-semibold hover:underline">advisory@beaconcapital.site</a>
+                        General Support: <a href="mailto:support@beaconcapital.site" className="text-primary font-semibold hover:underline">support@beaconcapital.site</a>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-6 bg-surface-container-low border border-surface-variant">
+                    <div className="w-10 h-10 bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined">phone</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-base text-on-background">Phone Support</h3>
+                      <p className="text-xs text-on-surface-variant mt-1">
+                        Direct Line: <a href="tel:+15123752360" className="text-primary font-semibold hover:underline">+1 (512) 375-2360</a>
                       </p>
                     </div>
                   </div>

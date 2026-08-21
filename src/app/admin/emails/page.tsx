@@ -12,33 +12,34 @@ interface TemplateOption {
 
 const TEMPLATES: TemplateOption[] = [
   // Auth & Onboarding
-  { key: "welcome_verification", name: "Welcome Verification Link", category: "Auth & Onboarding", subject: "Welcome to Beacon Capital - Verify Email", sender: "no-reply@beaconcapital.site" },
-  { key: "application_submitted", name: "Application Submitted", category: "Auth & Onboarding", subject: "Application Under Review - Beacon Capital", sender: "support@beaconcapital.site" },
-  { key: "application_approved", name: "Application Approved", category: "Auth & Onboarding", subject: "Your Beacon Capital Account Has Been Approved!", sender: "support@beaconcapital.site" },
-  { key: "application_rejected", name: "Application Declined", category: "Auth & Onboarding", subject: "Update Regarding Application Status", sender: "support@beaconcapital.site" },
+  { key: "welcome_verification", name: "Welcome Verification Link", category: "Auth & Onboarding", subject: "Welcome to Beacon Capital - Verify Email", sender: "no-reply@mail.beaconcapital.site" },
+  { key: "application_submitted", name: "Application Submitted", category: "Auth & Onboarding", subject: "Application Under Review - Beacon Capital", sender: "support@mail.beaconcapital.site" },
+  { key: "application_approved", name: "Application Approved", category: "Auth & Onboarding", subject: "Your Beacon Capital Account Has Been Approved!", sender: "support@mail.beaconcapital.site" },
+  { key: "application_rejected", name: "Application Declined", category: "Auth & Onboarding", subject: "Update Regarding Application Status", sender: "support@mail.beaconcapital.site" },
 
   // Payments & Transfers
-  { key: "transfer_initiated", name: "ACH / Wire Transfer Submitted", category: "Payments & Transfers", subject: "Wire Transfer Confirmation - Ref: TXN-9418-P", sender: "payments@beaconcapital.site" },
-  { key: "transfer_settled", name: "Transfer Settled & Cleared", category: "Payments & Transfers", subject: "Transfer Completed - Ref: TXN-9418-P", sender: "payments@beaconcapital.site" },
-  { key: "transfer_rejected", name: "Transfer Declined / Returned", category: "Payments & Transfers", subject: "Transfer Declined - Ref: TXN-9418-P", sender: "payments@beaconcapital.site" },
-  { key: "zelle_initiated", name: "Zelle Transfer Receipt", category: "Payments & Transfers", subject: "Zelle Transfer Confirmation - Ref: ZEL-4019-P", sender: "payments@beaconcapital.site" },
-  { key: "billpay_initiated", name: "Bill Payment Receipt", category: "Payments & Transfers", subject: "Bill Payment Confirmation - Ref: BPY-8812-P", sender: "payments@beaconcapital.site" },
+  { key: "transfer_initiated", name: "ACH / Wire Transfer Submitted", category: "Payments & Transfers", subject: "Wire Transfer Confirmation - Ref: TXN-9418-P", sender: "payments@mail.beaconcapital.site" },
+  { key: "transfer_received", name: "Transfer Received (Recipient Notice)", category: "Payments & Transfers", subject: "Alex Mercer sent you $350.00 - Ref: TXN-9418-P", sender: "payments@mail.beaconcapital.site" },
+  { key: "transfer_settled", name: "Transfer Settled & Cleared", category: "Payments & Transfers", subject: "Transfer Completed - Ref: TXN-9418-P", sender: "payments@mail.beaconcapital.site" },
+  { key: "transfer_rejected", name: "Transfer Declined / Returned", category: "Payments & Transfers", subject: "Transfer Declined - Ref: TXN-9418-P", sender: "payments@mail.beaconcapital.site" },
+  { key: "zelle_initiated", name: "Zelle Transfer Receipt", category: "Payments & Transfers", subject: "Zelle Transfer Confirmation - Ref: ZEL-4019-P", sender: "payments@mail.beaconcapital.site" },
+  { key: "billpay_initiated", name: "Bill Payment Receipt", category: "Payments & Transfers", subject: "Bill Payment Confirmation - Ref: BPY-8812-P", sender: "payments@mail.beaconcapital.site" },
 
   // Deposits
-  { key: "deposit_received_pending", name: "Mobile Deposit Received", category: "Deposits", subject: "Mobile Check Deposit Received - Ref: REF-3910-X", sender: "payments@beaconcapital.site" },
-  { key: "deposit_settled", name: "Mobile Deposit Cleared", category: "Deposits", subject: "Check Deposit Cleared - Ref: REF-3910-X", sender: "payments@beaconcapital.site" },
+  { key: "deposit_received_pending", name: "Mobile Deposit Received", category: "Deposits", subject: "Mobile Check Deposit Received - Ref: REF-3910-X", sender: "payments@mail.beaconcapital.site" },
+  { key: "deposit_settled", name: "Mobile Deposit Cleared", category: "Deposits", subject: "Check Deposit Cleared - Ref: REF-3910-X", sender: "payments@mail.beaconcapital.site" },
 
   // Billing & Ledger
-  { key: "ledger_adjustment_notice", name: "Ledger Balance Adjustment", category: "Billing", subject: "Notice: Account Balance Adjustment Applied", sender: "billing@beaconcapital.site" },
+  { key: "ledger_adjustment_notice", name: "Ledger Balance Adjustment", category: "Billing", subject: "Notice: Account Balance Adjustment Applied", sender: "billing@mail.beaconcapital.site" },
 
   // Security
-  { key: "account_frozen", name: "Account Frozen Alert", category: "Security", subject: "SECURITY ALERT: Account Access Restricted", sender: "security@beaconcapital.site" },
-  { key: "account_unfrozen", name: "Account Unfrozen Notice", category: "Security", subject: "SECURITY NOTICE: Account Access Restored", sender: "security@beaconcapital.site" },
-  { key: "password_reset", name: "Password Reset Request", category: "Security", subject: "Beacon Capital Password Reset Request", sender: "security@beaconcapital.site" },
+  { key: "account_frozen", name: "Account Frozen Alert", category: "Security", subject: "SECURITY ALERT: Account Access Restricted", sender: "security@mail.beaconcapital.site" },
+  { key: "account_unfrozen", name: "Account Unfrozen Notice", category: "Security", subject: "SECURITY NOTICE: Account Access Restored", sender: "security@mail.beaconcapital.site" },
+  { key: "password_reset", name: "Password Reset Request", category: "Security", subject: "Beacon Capital Password Reset Request", sender: "security@mail.beaconcapital.site" },
 
   // Admin Alerts
-  { key: "admin_new_applicant_alert", name: "Admin: New Applicant Alert", category: "Admin Alerts", subject: "[COMPLIANCE ALERT] New Account Application", sender: "internal@beaconcapital.site" },
-  { key: "admin_high_value_tx_alert", name: "Admin: High-Value Transfer", category: "Admin Alerts", subject: "[COMPLIANCE ALERT] High-Value Transfer Submitted", sender: "security@beaconcapital.site" },
+  { key: "admin_new_applicant_alert", name: "Admin: New Applicant Alert", category: "Admin Alerts", subject: "[COMPLIANCE ALERT] New Account Application", sender: "internal@mail.beaconcapital.site" },
+  { key: "admin_high_value_tx_alert", name: "Admin: High-Value Transfer", category: "Admin Alerts", subject: "[COMPLIANCE ALERT] High-Value Transfer Submitted", sender: "security@mail.beaconcapital.site" },
 ];
 
 export default function EmailStudioPage() {

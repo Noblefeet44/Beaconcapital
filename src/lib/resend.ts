@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { supabase } from '@/lib/supabase';
+import { htmlToPlainText } from '@/lib/email-templates';
 
 // Initialize Resend client with API key from environment
 export const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_key');
@@ -10,16 +11,18 @@ export interface SendEmailParams {
   subject: string;
   templateName: string;
   html: string;
+  text?: string;
   userId?: string;
   metadata?: Record<string, any>;
 }
 
 export async function sendEmail({
   to,
-  from = process.env.SENDER_PAYMENTS || 'Beacon Capital Payments <payments@beaconcapital.site>',
+  from = process.env.SENDER_PAYMENTS || 'Beacon Capital Payments <payments@mail.beaconcapital.site>',
   subject,
   templateName,
   html,
+  text,
   userId,
   metadata = {}
 }: SendEmailParams) {
@@ -28,12 +31,15 @@ export async function sendEmail({
       console.warn(`[Resend Warning] RESEND_API_KEY is not set. Email "${subject}" to ${to} was logged but not dispatched.`);
     }
 
-    // 1. Send email via Resend API
+    const plainText = text || htmlToPlainText(html);
+
+    // 1. Send email via Resend API with dual MIME (HTML + Plain Text)
     const { data, error } = await resend.emails.send({
       from,
       to,
       subject,
       html,
+      text: plainText,
     });
 
     if (error) {

@@ -23,6 +23,7 @@ function TransferFundsContent() {
 
   // External Destination Details
   const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
@@ -105,6 +106,7 @@ function TransferFundsContent() {
           type: "external_transfer",
           sourceAccountId,
           recipientName,
+          recipientEmail,
           bankName,
           accountNumber,
           routingNumber,
@@ -312,6 +314,19 @@ function TransferFundsContent() {
                       onChange={(e) => setRecipientName(e.target.value)}
                       placeholder="Johnathan Doe"
                       required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-xs">
+                    <label className="font-label-sm text-label-sm text-on-surface" htmlFor="recipientEmail">
+                      Recipient Email Address <span className="text-xs text-on-surface-variant font-normal">(For instant payment notice email)</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full data-input rounded-none py-sm px-sm font-body-md text-body-md text-on-surface bg-surface border border-outline-variant focus:outline-none"
+                      id="recipientEmail"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      placeholder="recipient@example.com"
                     />
                   </div>
                   <div className="flex flex-col gap-xs">

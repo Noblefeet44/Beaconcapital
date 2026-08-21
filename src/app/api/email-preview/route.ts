@@ -6,6 +6,7 @@ import {
   getApplicationApprovedEmail,
   getApplicationRejectedEmail,
   getTransferInitiatedEmail,
+  getTransferReceivedEmail,
   getTransferSettledEmail,
   getTransferRejectedEmail,
   getDepositReceivedPendingEmail,
@@ -50,6 +51,17 @@ export function getMockTemplateHtml(templateKey: string): string {
         sendingAccountMask: "4912",
         referenceNumber: "TXN-9418-P",
         date: sampleDate,
+      });
+
+    case "transfer_received":
+      return getTransferReceivedEmail({
+        senderName: sampleName,
+        transferType: "Zelle Transfer",
+        amount: 350.00,
+        recipientName: "chimayyy@outlook.com",
+        referenceNumber: "ZEL-4019-P",
+        date: sampleDate,
+        note: "Dinner & Drinks reimbursement",
       });
 
     case "transfer_settled":
