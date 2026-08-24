@@ -91,11 +91,11 @@ export default function RootLayout({
       "Asset Reconciliation",
       "Institutional Capital Management",
     ],
-    telephone: "+1-512-375-2360",
+    telephone: "+1-646-653-2883",
     email: "support@beaconcapital.site",
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+1-512-375-2360",
+      telephone: "+1-646-653-2883",
       email: "support@beaconcapital.site",
       contactType: "customer support",
       availableLanguage: ["English"],

@@ -121,7 +121,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-bold text-base text-on-background">Phone Support</h3>
                       <p className="text-xs text-on-surface-variant mt-1">
-                        Direct Line: <a href="tel:+15123752360" className="text-primary font-semibold hover:underline">+1 (512) 375-2360</a>
+                        Direct Line: <a href="tel:+16466532883" className="text-primary font-semibold hover:underline">+1 (646) 653-2883</a>
                       </p>
                     </div>
                   </div>
