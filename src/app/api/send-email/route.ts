@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/resend";
 import { getSupportEmail } from "@/lib/email-templates";
+import { inboxDb } from "@/lib/inbox-db";
 
 const ACCESS_PASSWORD = "Email@password";
 
@@ -63,6 +64,23 @@ export async function POST(req: NextRequest) {
         { error: result.error || "Failed to send email via Resend." },
         { status: 500 }
       );
+    }
+
+    // Also record in inboxDb for Sent tab view
+    try {
+      await inboxDb.saveSentEmail({
+        senderEmail: rawFromEmail,
+        recipientEmail: to,
+        recipientName: recipientName || undefined,
+        subject,
+        bodyText: message,
+        bodyHtml: html,
+        resendId: result.id,
+        status: "sent",
+        templateName: "support_compose",
+      });
+    } catch (dbErr) {
+      console.error("Failed to save to local sent logs:", dbErr);
     }
 
     return NextResponse.json({
