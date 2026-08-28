@@ -1,13 +1,4 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
 const eslintConfig = [
   {
@@ -19,8 +10,8 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
-  ...compat.config({
-    extends: ["next/core-web-vitals", "next/typescript"],
+  ...nextCoreWebVitals,
+  {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
@@ -28,7 +19,7 @@ const eslintConfig = [
       "react/no-unescaped-entities": "off",
       "@next/next/no-page-custom-font": "off",
     },
-  }),
+  },
 ];
 
 export default eslintConfig;
