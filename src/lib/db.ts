@@ -72,7 +72,7 @@ export const db = {
 
   async createUser(user: Omit<User, "id" | "createdAt" | "status" | "role" | "isFrozen" | "frozenReason">): Promise<User | null> {
     const newId = "u-" + Math.random().toString(36).substring(2, 11);
-    const newUser = {
+    const newUser: any = {
       ...user,
       id: newId,
       role: "user",
@@ -82,7 +82,14 @@ export const db = {
       rejectionReason: "",
     };
 
-    const { data, error } = await supabase.from('users').insert(newUser).select().single();
+    let { data, error } = await supabase.from('users').insert(newUser).select().single();
+    if (error && error.message && error.message.includes('rejectionReason')) {
+      delete newUser.rejectionReason;
+      const retry = await supabase.from('users').insert(newUser).select().single();
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) {
       console.error('Error creating user:', error);
       return null;
@@ -99,12 +106,24 @@ export const db = {
       updateData.rejectionReason = "";
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('users')
       .update(updateData)
       .eq('id', userId)
       .select()
       .single();
+
+    if (error && error.message && error.message.includes('rejectionReason')) {
+      delete updateData.rejectionReason;
+      const retry = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error || !data) {
       console.error('Error updating user status:', error);

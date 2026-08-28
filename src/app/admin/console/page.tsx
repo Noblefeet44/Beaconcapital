@@ -1100,7 +1100,7 @@ export default function AdminConsole() {
 
             <p className="text-xs text-[#90A4AE] mb-4">
               You are rejecting the account application for <strong className="text-white">{rejectingApplicant.firstName} {rejectingApplicant.lastName}</strong> ({rejectingApplicant.username}).
-              Please enter the specific rejection reason below. This will be sent to the customer via email notification.
+              Please enter the internal rejection reason below. As per policy, no notification email will be dispatched to the applicant.
             </p>
 
             <form

@@ -145,18 +145,28 @@ export function getApplicationSubmittedEmail(userName: string): string {
 // 3. APPLICATION APPROVED EMAIL
 // ----------------------------------------------------------------------
 export function getApplicationApprovedEmail(userName: string): string {
+  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://beaconcapital.site'}/login`;
   return wrapLayout(`
-    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
-      <h2 style="color: #166534; font-size: 16px; margin: 0 0 6px 0;">Account Confirmed</h2>
-      <p style="color: #15803d; margin: 0; font-size: 13.5px;">Your account is ready for use.</p>
+    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+      <h2 style="color: #166534; font-size: 17px; margin: 0 0 6px 0;">✓ Application Approved &amp; Account Activated</h2>
+      <p style="color: #15803d; margin: 0; font-size: 13.5px;">Your account review has been completed and your access is now active.</p>
     </div>
 
-    <p style="color: #334155; line-height: 1.6;">Hello ${userName},</p>
-    <p style="color: #334155; line-height: 1.6;">We are pleased to inform you that your ${BRAND_NAME} account is active. You can now log into your client portal to manage your preferences and services.</p>
+    <p style="color: #334155; line-height: 1.6;">Hello <strong>${userName}</strong>,</p>
+    <p style="color: #334155; line-height: 1.6;">We are pleased to inform you that your <strong>${BRAND_NAME}</strong> institutional account application has been verified and approved by Customer Service &amp; Compliance.</p>
     
-    <div style="text-align: center; margin: 24px 0;">
-      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://beaconcapital.site'}/login" style="background-color: ${BRAND_PRIMARY_COLOR}; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; display: inline-block;">Go to Portal</a>
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid ${BRAND_ACCENT_COLOR}; padding: 14px 16px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: ${BRAND_PRIMARY_COLOR};">How to Log In:</p>
+      <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
+        You can now access your account portal. Please log in using your registered <strong>Email Address</strong> and the <strong>Password</strong> you created during registration.
+      </p>
     </div>
+
+    <div style="text-align: center; margin: 26px 0;">
+      <a href="${loginUrl}" style="background-color: ${BRAND_PRIMARY_COLOR}; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">Log In to Your Account</a>
+    </div>
+
+    <p style="color: #64748b; font-size: 12.5px; line-height: 1.5;">If you experience any issues logging in, please reply to this email or contact support at <a href="mailto:${SUPPORT_EMAIL}" style="color: ${BRAND_ACCENT_COLOR}; text-decoration: none;">${SUPPORT_EMAIL}</a>.</p>
   `);
 }
 

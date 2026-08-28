@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.status === "Rejected") {
+      return NextResponse.json(
+        { error: "Your account application was declined by compliance. Please contact support@mail.beaconcapital.site for assistance." },
+        { status: 403 }
+      );
+    }
+
     // Set secure cookie
     const token = signToken({
       userId: user.id,
@@ -40,12 +47,14 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       success: true,
       role: user.role,
+      status: user.status,
       user: {
         id: user.id,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        status: user.status,
       },
     });
 

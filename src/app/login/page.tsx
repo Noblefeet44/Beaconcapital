@@ -33,6 +33,8 @@ export default function ConsumerLoginPage() {
 
       if (data.role === "admin") {
         router.push("/admin/console");
+      } else if (data.status === "Pending") {
+        router.push("/pending");
       } else {
         router.push("/dashboard");
       }

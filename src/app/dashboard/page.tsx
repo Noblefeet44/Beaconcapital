@@ -42,6 +42,14 @@ export default function AccountDashboard() {
         throw new Error("Failed to load session");
       }
       const data = await res.json();
+      if (data.user?.status === "Pending") {
+        router.push("/pending");
+        return;
+      }
+      if (data.user?.status === "Rejected") {
+        router.push("/login");
+        return;
+      }
       setUser(data.user);
       setAccounts(data.accounts);
 

@@ -52,22 +52,7 @@ export async function POST(req: NextRequest) {
     } else {
       const rejectionReason = reason || "Background verification check failed to meet compliance requirements.";
       updatedUser = await db.updateUserStatus(userId, "Rejected", rejectionReason);
-      const fullName = `${targetUser.firstName} ${targetUser.lastName}`;
-      emailDetails = {
-        recipient: targetUser.username,
-        recipientName: fullName,
-        subject: "Update Regarding Your Beacon Capital Application Status",
-        body: `Dear ${targetUser.firstName},\n\nRegrettably, your account application has been REJECTED for the following reason:\n"${rejectionReason}"`,
-      };
-
-      await sendEmail({
-        to: targetUser.username,
-        from: process.env.SENDER_SUPPORT || "Beacon Capital Support <support@beaconcapital.site>",
-        subject: "Update Regarding Your Beacon Capital Application Status",
-        templateName: "application_rejected",
-        userId: targetUser.id,
-        html: getApplicationRejectedEmail(fullName, rejectionReason),
-      });
+      emailDetails = null; // No email sent on rejection per requirement
     }
 
     if (!updatedUser) {

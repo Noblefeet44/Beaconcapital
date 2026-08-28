@@ -53,7 +53,7 @@ export default function ComprehensiveSignupPage() {
         throw new Error(data.error || "Signup failed");
       }
 
-      router.push("/dashboard");
+      router.push("/pending");
       router.refresh();
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
