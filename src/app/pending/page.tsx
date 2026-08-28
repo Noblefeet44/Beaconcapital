@@ -12,8 +12,8 @@ export default function PendingApprovalPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const checkStatus = async () => {
-    setRefreshing(true);
+  const checkStatus = React.useCallback(async (isManual = false) => {
+    if (isManual) setRefreshing(true);
     try {
       const res = await fetch("/api/auth/me", { cache: "no-store" });
       if (res.ok) {
@@ -31,16 +31,16 @@ export default function PendingApprovalPage() {
       console.error("Error checking account status:", err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      if (isManual) setRefreshing(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    checkStatus();
+    checkStatus(false);
     // Auto-poll status every 15 seconds in case admin approves while page is open
-    const interval = setInterval(checkStatus, 15000);
+    const interval = setInterval(() => checkStatus(false), 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [checkStatus]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -152,7 +152,7 @@ export default function PendingApprovalPage() {
           {/* Action Buttons */}
           <div className="mt-8 pt-6 border-t border-surface-variant flex flex-col sm:flex-row gap-3">
             <button
-              onClick={checkStatus}
+              onClick={() => checkStatus(true)}
               disabled={refreshing}
               className="flex-1 bg-primary text-on-primary font-bold text-xs py-3 px-4 hover:bg-primary-container transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
             >
