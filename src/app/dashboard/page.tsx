@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Account, Transaction, Card } from "@/lib/db";
+import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
 
 export default function AccountDashboard() {
   const router = useRouter();
@@ -13,6 +14,22 @@ export default function AccountDashboard() {
   const [routingNumber, setRoutingNumber] = useState("026014881");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Hero interactive & live time state
+  const [showBalance, setShowBalance] = useState(true);
+  const [currentDateTime, setCurrentDateTime] = useState({ time: "", date: "" });
+
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+      const date = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      setCurrentDateTime({ time, date });
+    };
+    updateDateTime();
+    const timer = setInterval(updateDateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Card interactive state
   const [showCardNumber, setShowCardNumber] = useState(false);
@@ -781,10 +798,27 @@ export default function AccountDashboard() {
               <span className="material-symbols-outlined mr-3">dashboard</span>
               <span className="font-body-md text-body-md">Dashboard</span>
             </Link>
-            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/transactions">
-              <span className="material-symbols-outlined mr-3">account_balance_wallet</span>
-              <span className="font-body-md text-body-md">Ledger Management</span>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/cards">
+              <span className="material-symbols-outlined mr-3">credit_card</span>
+              <span className="font-body-md text-body-md">Credit Cards</span>
             </Link>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/loans">
+              <span className="material-symbols-outlined mr-3">account_balance</span>
+              <span className="font-body-md text-body-md">Loans &amp; Facilities</span>
+            </Link>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/transactions">
+              <span className="material-symbols-outlined mr-3">receipt_long</span>
+              <span className="font-body-md text-body-md">History</span>
+            </Link>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/transfer">
+              <span className="material-symbols-outlined mr-3">swap_horiz</span>
+              <span className="font-body-md text-body-md">Transfers</span>
+            </Link>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/deposit">
+              <span className="material-symbols-outlined mr-3">add_circle</span>
+              <span className="font-body-md text-body-md">Deposit</span>
+            </Link>
+            <div className="my-2 border-t border-surface-dim" />
             <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200">
               <span className="material-symbols-outlined mr-3">logout</span>
               <span className="font-body-md text-body-md">Log Out</span>
@@ -851,312 +885,217 @@ export default function AccountDashboard() {
             </div>
           )}
 
-          {/* Welcome Hero */}
-          <section className="bg-surface-container-lowest border border-surface-dim rounded-none p-6 premium-shadow relative overflow-hidden mt-6 md:mt-0">
-            <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
+          {/* ── Modern Luxury Hero Card (Inspired by Video Reference) ── */}
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0D211A] via-[#091712] to-[#040A07] text-white p-6 sm:p-8 shadow-2xl border border-emerald-500/25 mt-4 md:mt-0 select-none">
+            {/* Ambient emerald backlight glow */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col gap-6">
+              {/* Top Row: User Avatar & Live Time/Date */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                    <span className="material-symbols-outlined text-2xl">person</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-emerald-400/80 font-medium block">
+                      Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 17 ? "Afternoon" : "Evening"}
+                    </span>
+                    <h2 className="font-bold text-lg sm:text-xl text-white tracking-tight">
+                      {user?.firstName} {user?.lastName}
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Live Clock & Date */}
+                <div className="text-right hidden sm:block">
+                  <div className="font-mono text-base font-bold text-emerald-400 tracking-wider">
+                    {currentDateTime.time || "02:39:10"}
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {currentDateTime.date || "Friday, June 5, 2026"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Row: Available Balance with Show/Hide Toggle */}
               <div>
-                <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-sm">
-                  Welcome Back, {user?.firstName}
-                </h1>
-                <p className="font-body-md text-body-md text-on-surface-variant mb-6">Total Aggregated Balance</p>
-                <div className="font-display-lg text-display-lg text-primary font-bold tracking-tight">
-                  ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide">
+                    Available Balance
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowBalance((prev) => !prev)}
+                    className="text-slate-400 hover:text-white transition-colors p-0.5"
+                    title={showBalance ? "Hide Balance" : "Show Balance"}
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      {showBalance ? "visibility" : "visibility_off"}
+                    </span>
+                  </button>
+                </div>
+                <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white drop-shadow">
+                  {showBalance
+                    ? `$${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+                    : "•••••••••••• USD"}
                 </div>
               </div>
 
-              {/* Quick Actions Grid within Hero */}
-              <div className="grid grid-cols-4 gap-xs md:gap-sm bg-surface-container p-2 rounded-none border border-surface-dim self-start w-full md:w-auto">
-                <Link
-                  href={checkRestriction() ? "#" : "/dashboard/transfer"}
-                  onClick={(e) => {
-                    const restriction = checkRestriction();
-                    if (restriction) {
-                      e.preventDefault();
-                      alert(restriction);
-                    }
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"
-                >
-                  <span className="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform">swap_horiz</span>
-                  <span className="font-label-sm text-label-sm text-on-surface">Transfer</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    const restriction = checkRestriction();
-                    if (restriction) {
-                      alert(restriction);
-                      return;
-                    }
-                    setActiveModal("zelle");
-                    setModalError("");
-                    setModalSuccess("");
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"
-                >
-                  <span className="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform">send_money</span>
-                  <span className="font-label-sm text-label-sm text-on-surface">Zelle</span>
-                </button>
-                <button
-                  onClick={() => {
-                    const restriction = checkRestriction();
-                    if (restriction) {
-                      alert(restriction);
-                      return;
-                    }
-                    setActiveModal("billpay");
-                    setModalError("");
-                    setModalSuccess("");
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"
-                >
-                  <span className="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform">receipt_long</span>
-                  <span className="font-label-sm text-label-sm text-on-surface">Bill Pay</span>
-                </button>
-                <Link
-                  href={checkRestriction() ? "#" : "/dashboard/deposit"}
-                  onClick={(e) => {
-                    const restriction = checkRestriction();
-                    if (restriction) {
-                      e.preventDefault();
-                      alert(restriction);
-                    }
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-none hover:bg-surface-container-highest transition-colors group"
-                >
-                  <span className="material-symbols-outlined text-primary mb-2 group-hover:scale-110 transition-transform">add_circle</span>
-                  <span className="font-label-sm text-label-sm text-on-surface">Deposit</span>
-                </Link>
+              {/* Bottom Row: Account Number Badge + Quick Action Pills */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-white/10">
+                {/* Account badge */}
+                <div className="flex items-center gap-2 bg-black/40 border border-white/10 px-3.5 py-1.5 rounded-full self-start">
+                  <span className="material-symbols-outlined text-emerald-400 text-sm">shield</span>
+                  <span className="text-xs font-mono text-slate-300">
+                    Your Account Number:{" "}
+                    <strong className="text-white font-bold">
+                      {accounts[0]?.accountNumber ? `${accounts[0].accountNumber.slice(0, 4)}...${accounts[0].accountNumber.slice(-4)}` : "6194...8491"}
+                    </strong>
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 ml-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Active
+                  </span>
+                </div>
+
+                {/* Quick pills inside hero */}
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <Link
+                    href="/dashboard/transactions"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-semibold rounded-full transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">receipt_long</span>
+                    <span>History</span>
+                  </Link>
+                  <Link
+                    href={checkRestriction() ? "#" : "/dashboard/transfer"}
+                    onClick={(e) => {
+                      const restriction = checkRestriction();
+                      if (restriction) {
+                        e.preventDefault();
+                        alert(restriction);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-[#040A07] text-xs font-bold rounded-full transition-colors shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-sm">send_money</span>
+                    <span>Transfer</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* ── Luxury Credit Card Section ── */}
-          <section className="flex flex-col gap-sm">
-            <div className="flex justify-between items-center border-b border-surface-dim pb-sm mb-xs">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-xl">credit_card</span>
-                <h2 className="font-headline-md text-headline-md text-on-background">Beacon Private Client Cards</h2>
-              </div>
-              <span className="text-[11px] font-mono uppercase tracking-widest px-2.5 py-1 bg-primary/10 text-primary border border-primary/30 font-bold">
-                Direct Cardholder Access
-              </span>
+          {/* ── Popular Quick Actions (2x2 Grid from Reference Video) ── */}
+          <section className="space-y-3">
+            <div>
+              <h2 className="font-bold text-base sm:text-lg text-on-background">
+                What would you like to do today?
+              </h2>
+              <p className="text-xs text-on-surface-variant">
+                Choose from our popular actions below
+              </p>
             </div>
 
-            {cards.length === 0 ? (
-              <div className="bg-surface-container-lowest border border-surface-dim p-6 text-center text-on-surface-variant">
-                <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2">credit_card_off</span>
-                <p className="font-body-md text-body-md">No active cards issued. Provisioning your Beacon Elite Black card...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Visual Luxury Card */}
-                {cards.map((card) => (
-                  <div key={card.id} className="lg:col-span-7 flex flex-col gap-3">
-                    <div className="relative overflow-hidden w-full aspect-[1.586/1] max-w-[460px] bg-gradient-to-br from-[#1b2230] via-[#111722] to-[#0a0d14] text-white p-6 sm:p-7 shadow-2xl border border-[#D4AF37]/40 flex flex-col justify-between group select-none">
-                      {/* Metallic sheen overlay */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.18),transparent_60%)] pointer-events-none" />
-                      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_40%,rgba(255,255,255,0.04)_50%,transparent_60%)] pointer-events-none" />
-
-                      {/* Card Top: Bank name & Tier */}
-                      <div className="relative z-10 flex justify-between items-start">
-                        <div>
-                          <div className="font-headline-md text-lg sm:text-xl font-bold tracking-widest text-[#D4AF37] uppercase drop-shadow">
-                            BEACON CAPITAL
-                          </div>
-                          <div className="text-[10px] sm:text-xs text-[#90A4AE] font-mono uppercase tracking-widest font-semibold">
-                            {card.cardTier || "BEACON ELITE BLACK"}
-                          </div>
-                        </div>
-
-                        {/* Status pill */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 text-xs font-mono">
-                          <span className={`w-2 h-2 rounded-full ${card.isFrozen ? "bg-amber-400" : "bg-emerald-400"} animate-pulse`} />
-                          <span className="text-[11px] uppercase tracking-wider font-bold">
-                            {card.isFrozen ? "LOCKED" : "ACTIVE"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Chip & Contactless */}
-                      <div className="relative z-10 flex items-center justify-between my-1 sm:my-2">
-                        {/* EMV Chip graphic */}
-                        <div className="w-12 h-9 bg-gradient-to-br from-[#E6C665] via-[#C9A339] to-[#8C6B1C] rounded-[4px] border border-[#F4DC89]/60 shadow-inner flex flex-col justify-around p-1">
-                          <div className="w-full h-[1px] bg-black/30" />
-                          <div className="w-full h-[1px] bg-black/30" />
-                          <div className="w-full h-[1px] bg-black/30" />
-                        </div>
-                        <span className="material-symbols-outlined text-white/70 text-2xl rotate-90">
-                          contactless
-                        </span>
-                      </div>
-
-                      {/* Card Number */}
-                      <div className="relative z-10 font-mono tracking-widest text-lg sm:text-2xl font-bold text-white/95 flex items-center justify-between">
-                        <span>
-                          {showCardNumber
-                            ? card.cardNumber
-                            : `4532  ••••  ••••  ${card.cardNumber.replace(/\s+/g, "").slice(-4)}`}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowCardNumber((prev) => !prev)}
-                          className="text-white/60 hover:text-[#D4AF37] transition-colors p-1"
-                          title={showCardNumber ? "Hide Number" : "Reveal Number"}
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            {showCardNumber ? "visibility_off" : "visibility"}
-                          </span>
-                        </button>
-                      </div>
-
-                      {/* Bottom Row: Holder, Expiry, CVV */}
-                      <div className="relative z-10 flex justify-between items-end pt-2 border-t border-white/10">
-                        <div>
-                          <div className="text-[9px] uppercase tracking-wider text-[#90A4AE]">Cardholder</div>
-                          <div className="font-semibold text-xs sm:text-sm tracking-wider uppercase truncate max-w-[170px] text-white">
-                            {card.cardHolder}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider text-[#90A4AE]">Expires</div>
-                            <div className="font-mono text-xs sm:text-sm font-semibold tracking-wider text-white">
-                              {card.expiryMonth}/{card.expiryYear}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-[9px] uppercase tracking-wider text-[#90A4AE] flex items-center gap-1">
-                              CVV
-                              <button
-                                type="button"
-                                onClick={() => setShowCvv((prev) => !prev)}
-                                className="text-white/60 hover:text-white"
-                              >
-                                <span className="material-symbols-outlined text-[12px]">
-                                  {showCvv ? "visibility_off" : "visibility"}
-                                </span>
-                              </button>
-                            </div>
-                            <div className="font-mono text-xs sm:text-sm font-semibold tracking-wider text-white">
-                              {showCvv ? card.cvv : "•••"}
-                            </div>
-                          </div>
-
-                          <div className="font-serif font-black italic text-lg sm:text-xl text-[#D4AF37] tracking-wider ml-1">
-                            VISA
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Card Actions Ribbon */}
-                    <div className="flex flex-wrap items-center gap-2 max-w-[460px]">
-                      <button
-                        onClick={(e) => handleCopy(card.cardNumber, `card-num-${card.id}`, e)}
-                        className="flex-1 min-w-[130px] flex items-center justify-center gap-1.5 py-2.5 px-3 bg-surface-container hover:bg-surface-container-high border border-outline text-xs font-bold uppercase tracking-wider text-on-surface transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary">
-                          {copiedMap[`card-num-${card.id}`] ? "check" : "content_copy"}
-                        </span>
-                        <span>{copiedMap[`card-num-${card.id}`] ? "Copied!" : "Copy Card Number"}</span>
-                      </button>
-
-                      <button
-                        onClick={(e) => handleCopy(card.cvv, `card-cvv-${card.id}`, e)}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-surface-container hover:bg-surface-container-high border border-outline text-xs font-bold uppercase tracking-wider text-on-surface transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary">
-                          {copiedMap[`card-cvv-${card.id}`] ? "check" : "pin"}
-                        </span>
-                        <span>{copiedMap[`card-cvv-${card.id}`] ? "CVV Copied" : "Copy CVV"}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleToggleCardFreeze(card)}
-                        disabled={cardFreezeLoading}
-                        className={`flex items-center justify-center gap-1.5 py-2.5 px-3 border text-xs font-bold uppercase tracking-wider transition-colors ${
-                          card.isFrozen
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/40 hover:bg-amber-500/20"
-                            : "bg-surface-container hover:bg-red-900/20 text-on-surface hover:text-red-400 border-outline"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          {card.isFrozen ? "lock_open" : "lock"}
-                        </span>
-                        <span>{card.isFrozen ? "Unlock Card" : "Freeze Card"}</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Card Limit & Benefits Panel */}
-                <div className="lg:col-span-5 bg-surface-container-lowest border border-surface-dim p-5 sm:p-6 space-y-4">
-                  <div className="border-b border-surface-dim pb-3">
-                    <h3 className="font-headline-sm text-sm font-bold uppercase tracking-wider text-on-background">
-                      Credit Limit &amp; Spending Power
-                    </h3>
-                    <p className="text-xs text-on-surface-variant mt-0.5">
-                      Private Client Revolving Line of Credit
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs text-on-surface-variant uppercase font-semibold">Available Credit</span>
-                      <span className="font-headline-sm text-base font-bold text-[#2E7D32]">
-                        ${(cards[0]?.availableCredit || 48500).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="w-full bg-surface-container h-2.5 overflow-hidden">
-                      <div
-                        className="bg-primary h-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(100, Math.max(5, (((cards[0]?.creditLimit || 50000) - (cards[0]?.availableCredit || 48500)) / (cards[0]?.creditLimit || 50000)) * 100))}%`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex justify-between text-[11px] text-on-surface-variant pt-1">
-                      <span>Used: ${((cards[0]?.creditLimit || 50000) - (cards[0]?.availableCredit || 48500)).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                      <span className="font-semibold text-on-surface">
-                        Total Limit: ${(cards[0]?.creditLimit || 50000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-surface-dim space-y-2 text-xs">
-                    <div className="flex items-center gap-2 text-on-surface">
-                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
-                      <span>Zero foreign transaction exchange surcharge</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-on-surface">
-                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
-                      <span>24/7 dedicated institutional concierge &amp; wire priority</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-on-surface">
-                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
-                      <span>Protected under Federal Reg E &amp; Chip-and-PIN Tokenization</span>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {/* Action 1: Account Info */}
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+                className="flex flex-col items-center justify-center p-5 bg-surface-container-lowest hover:bg-surface-container border border-surface-dim hover:border-primary/40 rounded-2xl transition-all shadow-sm group text-center"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#1A2436] text-primary flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-outlined text-2xl">account_circle</span>
                 </div>
-              </div>
-            )}
+                <span className="font-bold text-sm text-on-background">Account Info</span>
+                <span className="text-[11px] text-on-surface-variant mt-0.5">Profile &amp; Routing</span>
+              </button>
+
+              {/* Action 2: Send Money */}
+              <Link
+                href={checkRestriction() ? "#" : "/dashboard/transfer"}
+                onClick={(e) => {
+                  const restriction = checkRestriction();
+                  if (restriction) {
+                    e.preventDefault();
+                    alert(restriction);
+                  }
+                }}
+                className="flex flex-col items-center justify-center p-5 bg-emerald-50/60 dark:bg-emerald-950/20 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/30 border border-emerald-200/60 dark:border-emerald-800/30 rounded-2xl transition-all shadow-sm group text-center"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-outlined text-2xl">send_money</span>
+                </div>
+                <span className="font-bold text-sm text-emerald-900 dark:text-emerald-300">Send Money</span>
+                <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5">Domestic &amp; Wire</span>
+              </Link>
+
+              {/* Action 3: Deposit */}
+              <Link
+                href={checkRestriction() ? "#" : "/dashboard/deposit"}
+                onClick={(e) => {
+                  const restriction = checkRestriction();
+                  if (restriction) {
+                    e.preventDefault();
+                    alert(restriction);
+                  }
+                }}
+                className="flex flex-col items-center justify-center p-5 bg-surface-container-lowest hover:bg-surface-container border border-surface-dim hover:border-primary/40 rounded-2xl transition-all shadow-sm group text-center"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-outlined text-2xl">add_circle</span>
+                </div>
+                <span className="font-bold text-sm text-on-background">Deposit</span>
+                <span className="text-[11px] text-on-surface-variant mt-0.5">Fund Accounts</span>
+              </Link>
+
+              {/* Action 4: History */}
+              <Link
+                href="/dashboard/transactions"
+                className="flex flex-col items-center justify-center p-5 bg-amber-50/60 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 border border-amber-200/60 dark:border-amber-800/30 rounded-2xl transition-all shadow-sm group text-center"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-outlined text-2xl">receipt_long</span>
+                </div>
+                <span className="font-bold text-sm text-amber-900 dark:text-amber-300">History</span>
+                <span className="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-0.5">Past Activity</span>
+              </Link>
+            </div>
           </section>
 
-          {/* ── Institutional Accounts Stack with Direct Copy Buttons ── */}
+          {/* ── Private Client Cards Quick Access Banner ── */}
+          <section className="bg-gradient-to-r from-[#111722] via-[#1A2332] to-[#111722] border border-[#D4AF37]/40 rounded-2xl p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-2xl">credit_card</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm sm:text-base tracking-wide text-white">
+                  Beacon Private Client Cards
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {cards.length > 0 ? `Beacon Elite Black Card •••• ${cards[0].cardNumber.replace(/\s+/g, "").slice(-4)}` : "Private Client Credit Card"}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/cards"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#D4AF37] hover:bg-[#b89528] text-black font-bold text-xs uppercase tracking-wider rounded-lg transition-colors self-start sm:self-auto shadow"
+            >
+              <span>View Cards</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </Link>
+          </section>
+
+          {/* ── Institutional Accounts List (Clean, Adjacent Account Numbers) ── */}
           <section className="flex flex-col gap-sm">
             <div className="flex justify-between items-center border-b border-surface-dim pb-sm mb-xs">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-xl">account_balance</span>
                 <h2 className="font-headline-md text-headline-md text-on-background">Your Accounts</h2>
               </div>
-              <span className="text-xs font-mono text-on-surface-variant">
-                Routing: <strong className="text-primary font-bold">{routingNumber}</strong>
-              </span>
             </div>
 
             {accounts.map((acc) => {
@@ -1164,11 +1103,11 @@ export default function AccountDashboard() {
               return (
                 <div
                   key={acc.id}
-                  className="bg-surface-container-lowest border border-surface-dim rounded-none p-4 md:p-6 hover:border-primary transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                  className="bg-surface-container-lowest border border-surface-dim rounded-2xl p-4 sm:p-5 hover:border-primary/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
                 >
                   {/* Account Identity */}
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-none bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors shrink-0 mt-0.5 md:mt-0">
+                  <div className="flex items-center gap-3.5 flex-1">
+                    <div className="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
                       <span className="material-symbols-outlined">
                         {isLoan
                           ? "request_quote"
@@ -1180,200 +1119,102 @@ export default function AccountDashboard() {
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 flex-1">
+                    <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/dashboard/transactions?accountId=${acc.id}`}
-                          className="font-body-lg text-body-lg font-semibold text-on-background hover:text-primary transition-colors"
+                          className="font-semibold text-base text-on-background hover:text-primary transition-colors"
                         >
                           {acc.accountName}
                         </Link>
+                        {/* Account number close to title without bulky copy button */}
+                        <span className="text-xs font-mono font-semibold text-on-surface-variant bg-surface-container px-2.5 py-0.5 rounded-full border border-surface-dim">
+                          • {acc.accountNumber}
+                        </span>
                         {isLoan && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                            Credit Facility
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-500/20 text-amber-500 border border-amber-500/40 rounded">
+                            Loan
                           </span>
                         )}
                       </div>
 
-                      {/* Numbers & Copy Buttons Bar */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-0.5">
-                        {/* Account Number */}
-                        <div className="inline-flex items-center gap-1.5 bg-surface-container/60 px-2 py-1 border border-outline/30">
-                          <span className="text-[11px] text-on-surface-variant font-mono font-medium">ACCT:</span>
-                          <span className="font-mono text-xs text-on-background font-bold tracking-wider">
-                            {acc.accountNumber}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopy(acc.accountNumber, `acc-${acc.id}`, e)}
-                            className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-surface-container-high hover:bg-primary hover:text-on-primary text-primary transition-colors"
-                            title="Copy Account Number"
-                          >
-                            <span className="material-symbols-outlined text-[13px]">
-                              {copiedMap[`acc-${acc.id}`] ? "check" : "content_copy"}
-                            </span>
-                            <span>{copiedMap[`acc-${acc.id}`] ? "Copied" : "Copy"}</span>
-                          </button>
-                        </div>
-
-                        {/* Routing Number */}
-                        <div className="inline-flex items-center gap-1.5 bg-surface-container/60 px-2 py-1 border border-outline/30">
-                          <span className="text-[11px] text-on-surface-variant font-mono font-medium">ROUTING:</span>
-                          <span className="font-mono text-xs text-on-background font-bold tracking-wider">
-                            {acc.routingNumber || routingNumber}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopy(acc.routingNumber || routingNumber, `rt-${acc.id}`, e)}
-                            className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-surface-container-high hover:bg-primary hover:text-on-primary text-primary transition-colors"
-                            title="Copy Routing Number"
-                          >
-                            <span className="material-symbols-outlined text-[13px]">
-                              {copiedMap[`rt-${acc.id}`] ? "check" : "content_copy"}
-                            </span>
-                            <span>{copiedMap[`rt-${acc.id}`] ? "Copied" : "Copy"}</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Loan Terms Sub-bar */}
-                      {isLoan && (
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-on-surface-variant pt-1 font-mono">
-                          <span>Rate: <strong className="text-on-background">{acc.interestRate || 5.25}% Fixed APR</strong></span>
-                          <span>•</span>
-                          <span>Installment: <strong className="text-on-background">${(acc.monthlyPayment || 3420).toLocaleString("en-US", { minimumFractionDigits: 2 })}/mo</strong></span>
-                          <span>•</span>
-                          <span>Term: <strong className="text-on-background">{acc.loanTerm || "60 Months"}</strong></span>
-                        </div>
-                      )}
+                      <p className="text-xs text-on-surface-variant capitalize mt-0.5">
+                        {isLoan ? "Senior Credit Facility" : `${acc.accountType} Account`}
+                      </p>
                     </div>
                   </div>
 
                   {/* Account Balance & Action */}
-                  <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 border-surface-dim pt-3 md:pt-0 shrink-0">
-                    <div className="text-left md:text-right">
-                      <div className={`font-headline-md text-headline-md font-bold ${isLoan ? "text-amber-400" : acc.balance < 0 ? "text-primary" : "text-on-background"}`}>
+                  <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-surface-dim pt-3 sm:pt-0 shrink-0">
+                    <div className="text-left sm:text-right">
+                      <div className={`font-mono text-lg font-bold ${isLoan ? "text-amber-500" : acc.balance < 0 ? "text-primary" : "text-on-background"}`}>
                         ${Math.abs(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </div>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant uppercase">
-                        {isLoan ? "Principal Balance" : acc.accountType === "credit" ? "Current Balance" : "Available Balance"}
+                      <p className="text-[11px] text-on-surface-variant uppercase">
+                        {isLoan ? "Balance Due" : "Available"}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-2">
-                      {isLoan ? (
-                        <button
-                          onClick={() => {
-                            setLoanFormData((prev) => ({
-                              ...prev,
-                              loanAccountId: acc.id,
-                              amount: (acc.monthlyPayment || 3420).toString(),
-                            }));
-                            setActiveLoanModal("pay");
-                            setLoanError("");
-                            setLoanSuccess("");
-                          }}
-                          className="px-3 py-1.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">payments</span>
-                          <span>Pay Loan</span>
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/dashboard/transactions?accountId=${acc.id}`}
-                          className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold uppercase tracking-wider flex items-center gap-1 border border-outline transition-colors"
-                        >
-                          <span>Ledger</span>
-                          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                        </Link>
-                      )}
-                    </div>
+                    <Link
+                      href={`/dashboard/transactions?accountId=${acc.id}`}
+                      className="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-1 border border-outline transition-colors"
+                    >
+                      <span>History</span>
+                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </Link>
                   </div>
                 </div>
               );
             })}
           </section>
 
-          {/* ── Institutional Credit & Loan Facility Section ── */}
-          <section className="bg-surface-container-lowest border border-surface-dim p-6 premium-shadow space-y-4">
+          {/* ── Institutional Credit & Loan Facility Summary ── */}
+          <section className="bg-surface-container-lowest border border-surface-dim rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-surface-dim pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#D4AF37]">account_balance_wallet</span>
-                  <h2 className="font-headline-md text-headline-md text-on-background">
-                    Institutional Credit &amp; Term Facilities
+                  <span className="material-symbols-outlined text-[#D4AF37] text-xl">account_balance_wallet</span>
+                  <h2 className="font-bold text-base sm:text-lg text-on-background">
+                    Institutional Loans &amp; Credit Facilities
                   </h2>
                 </div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                  Structured commercial lending, real estate senior credit, and revolving operational liquidity.
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Term debt financing, commercial real estate senior lines, and revolving facilities.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setActiveLoanModal("apply");
-                    setLoanError("");
-                    setLoanSuccess("");
-                  }}
-                  className="px-4 py-2.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm"
+                <Link
+                  href="/dashboard/loans"
+                  className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-sm">add_circle</span>
-                  <span>Apply for Facility</span>
-                </button>
+                  <span>Manage Facilities</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
               </div>
             </div>
 
-            {/* Loan Facility Cards or Placeholder */}
             {accounts.some((a) => a.accountType === "loan") ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-3">
                 {accounts.filter((a) => a.accountType === "loan").map((loan) => (
                   <div
                     key={loan.id}
-                    className="bg-surface-container-low border border-surface-dim p-5 flex flex-col justify-between space-y-4"
+                    className="p-4 bg-surface-container-low border border-surface-dim rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div>
-                      <div className="flex justify-between items-start">
-                        <span className="text-xs font-bold text-primary uppercase tracking-wider font-mono">
-                          Senior Secured Facility
-                        </span>
-                        <span className="text-[11px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          Active &amp; Performing
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-on-background">{loan.accountName}</span>
+                        <span className="text-xs font-mono text-on-surface-variant">• {loan.accountNumber}</span>
                       </div>
-                      <h3 className="font-headline-sm text-base font-bold text-on-background mt-1">
-                        {loan.accountName}
-                      </h3>
-                      <p className="text-xs text-on-surface-variant font-mono mt-0.5">
-                        Acct: {loan.accountNumber} • Routing: {loan.routingNumber || routingNumber}
+                      <p className="text-xs font-mono text-on-surface-variant mt-0.5">
+                        {loan.interestRate || 5.25}% APR • ${(loan.monthlyPayment || 3420).toLocaleString("en-US", { minimumFractionDigits: 2 })}/mo installment
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 py-3 border-y border-surface-dim text-center">
-                      <div>
-                        <div className="text-[10px] text-on-surface-variant uppercase">Principal Due</div>
-                        <div className="font-headline-sm text-sm font-bold text-on-background mt-0.5">
-                          ${loan.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                        </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-3">
+                      <div className="font-mono text-base font-bold text-amber-500">
+                        ${Math.abs(loan.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </div>
-                      <div>
-                        <div className="text-[10px] text-on-surface-variant uppercase">Fixed APR</div>
-                        <div className="font-headline-sm text-sm font-bold text-[#D4AF37] mt-0.5">
-                          {loan.interestRate || 5.25}%
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-on-surface-variant uppercase">Monthly Due</div>
-                        <div className="font-headline-sm text-sm font-bold text-on-background mt-0.5">
-                          ${(loan.monthlyPayment || 3420).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-xs text-on-surface-variant font-mono">
-                        Term: {loan.loanTerm || "60 Months"}
-                      </span>
                       <button
                         onClick={() => {
                           setLoanFormData((prev) => ({
@@ -1383,35 +1224,26 @@ export default function AccountDashboard() {
                           }));
                           setActiveLoanModal("pay");
                         }}
-                        className="px-4 py-2 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                        className="px-3.5 py-1.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-1 transition-colors"
                       >
                         <span className="material-symbols-outlined text-sm">payment</span>
-                        <span>Pay Installment</span>
+                        <span>Pay</span>
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-5 bg-surface-container-low border border-surface-dim flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h4 className="font-body-lg text-body-lg font-bold text-on-background">
-                    Tailored Institutional Capital for Your Enterprise
-                  </h4>
-                  <p className="text-xs text-on-surface-variant max-w-xl">
-                    Fast-track debt financing up to $5,000,000.00 with transparent amortization schedules, competitive benchmark rates, and dedicated structuring teams.
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setActiveLoanModal("apply");
-                    setLoanError("");
-                    setLoanSuccess("");
-                  }}
-                  className="px-5 py-2.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider shrink-0 transition-colors"
+              <div className="p-4 bg-surface-container-low rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <span className="text-on-surface-variant">
+                  No active loan facility. Apply for an institutional credit line up to $5,000,000.00.
+                </span>
+                <Link
+                  href="/dashboard/loans"
+                  className="px-4 py-2 bg-primary text-white font-bold uppercase tracking-wider rounded-lg shrink-0 self-start sm:self-auto"
                 >
-                  Start Loan Application
-                </button>
+                  Apply for Facility
+                </Link>
               </div>
             )}
           </section>
@@ -1421,7 +1253,7 @@ export default function AccountDashboard() {
             <div className="flex justify-between items-center border-b border-surface-dim pb-sm mb-xs">
               <h2 className="font-headline-md text-headline-md text-on-background">Recent Transactions</h2>
               <Link href="/dashboard/transactions" className="text-primary hover:underline text-sm font-semibold flex items-center gap-1">
-                View Ledger <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                View History <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </Link>
             </div>
 
@@ -1488,21 +1320,12 @@ export default function AccountDashboard() {
         </main>
       </div>
 
-      {/* BottomNavBar Mobile */}
-      <nav className="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center bg-surface px-2 py-3 border-t border-outline bg-surface text-primary font-label-sm text-label-sm shadow-none">
-        <Link className="flex flex-col items-center justify-center text-primary font-bold p-2 rounded-none w-full" href="/dashboard">
-          <span className="material-symbols-outlined mb-1">account_balance</span>
-          <span>Accounts</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-on-surface-variant p-2 rounded-none w-full" href="/dashboard/transactions">
-          <span className="material-symbols-outlined mb-1">payments</span>
-          <span>Ledger</span>
-        </Link>
-        <button onClick={handleLogout} className="flex flex-col items-center justify-center text-on-surface-variant p-2 rounded-none w-full">
-          <span className="material-symbols-outlined mb-1">logout</span>
-          <span>Logout</span>
-        </button>
-      </nav>
+      {/* Reusable Mobile App Bottom Navigation Bar with Banking Menu */}
+      <MobileBottomNav
+        user={user}
+        primaryAccount={accounts.find((a) => a.accountType !== "loan") || accounts[0]}
+        onOpenProfile={() => setDrawerOpen(true)}
+      />
 
       {/* Quick Action Modal Overlay */}
       {activeModal && (

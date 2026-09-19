@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Transaction, Account } from "@/lib/db";
+import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
 
 function TransactionHistoryContent() {
   const router = useRouter();
@@ -105,10 +106,27 @@ function TransactionHistoryContent() {
               <span className="material-symbols-outlined">dashboard</span>
               <span className="font-body-md text-body-md">Dashboard</span>
             </Link>
-            <Link className="flex items-center gap-3 px-4 py-3 rounded bg-primary text-on-primary font-bold transition-colors duration-200" href="/dashboard/transactions">
-              <span className="material-symbols-outlined">account_balance_wallet</span>
-              <span className="font-body-md text-body-md">Ledger Management</span>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/cards">
+              <span className="material-symbols-outlined">credit_card</span>
+              <span className="font-body-md text-body-md">Credit Cards</span>
             </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/loans">
+              <span className="material-symbols-outlined">account_balance</span>
+              <span className="font-body-md text-body-md">Loans &amp; Facilities</span>
+            </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded bg-primary text-on-primary font-bold transition-colors duration-200" href="/dashboard/transactions">
+              <span className="material-symbols-outlined">receipt_long</span>
+              <span className="font-body-md text-body-md">History</span>
+            </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/transfer">
+              <span className="material-symbols-outlined">swap_horiz</span>
+              <span className="font-body-md text-body-md">Transfers</span>
+            </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/deposit">
+              <span className="material-symbols-outlined">add_circle</span>
+              <span className="font-body-md text-body-md">Deposit</span>
+            </Link>
+            <div className="my-2 border-t border-surface-dim" />
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200">
               <span className="material-symbols-outlined">logout</span>
               <span className="font-body-md text-body-md">Log Out</span>
@@ -119,9 +137,9 @@ function TransactionHistoryContent() {
         {/* Main Content Area */}
         <main className="flex-1 w-full flex flex-col gap-md px-margin-mobile md:px-0 mt-6 md:mt-0">
           <div className="border-b border-surface-dim pb-sm">
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Ledger Account Statements</h2>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface">Transaction History</h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-              {selectedAccount ? `${selectedAccount.accountName} (${selectedAccount.accountNumber})` : "Aggregated Transaction Ledger"}
+              {selectedAccount ? `${selectedAccount.accountName} (${selectedAccount.accountNumber})` : "Aggregated Transaction History"}
             </p>
           </div>
 
@@ -224,21 +242,11 @@ function TransactionHistoryContent() {
         </main>
       </div>
 
-      {/* BottomNavBar Mobile */}
-      <nav className="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center bg-surface px-2 py-3 border-t border-outline bg-surface text-primary font-label-sm text-label-sm shadow-none">
-        <Link className="flex flex-col items-center justify-center text-on-surface-variant p-2 rounded-none w-full" href="/dashboard">
-          <span className="material-symbols-outlined mb-1">account_balance</span>
-          <span>Accounts</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-primary font-bold p-2 rounded-none w-full" href="/dashboard/transactions">
-          <span className="material-symbols-outlined mb-1">payments</span>
-          <span>Ledger</span>
-        </Link>
-        <button onClick={handleLogout} className="flex flex-col items-center justify-center text-on-surface-variant p-2 rounded-none w-full">
-          <span className="material-symbols-outlined mb-1">logout</span>
-          <span>Logout</span>
-        </button>
-      </nav>
+      {/* Reusable Mobile App Bottom Navigation Bar with Banking Menu */}
+      <MobileBottomNav
+        user={user}
+        primaryAccount={accounts.find((a) => a.accountType !== "loan") || accounts[0]}
+      />
     </div>
   );
 }
