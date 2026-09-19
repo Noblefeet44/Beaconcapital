@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Account, Transaction } from "@/lib/db";
+import { User, Account, Transaction, Card } from "@/lib/db";
 
 interface UserWithAccounts extends User {
   accounts: Account[];
+  cards?: Card[];
 }
 
 type TabType = "overview" | "applicants" | "pending" | "users" | "profile";
@@ -803,10 +804,11 @@ export default function AdminConsole() {
               </div>
 
               {/* Account Balance Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 {(() => {
                   const checking = selectedUser.accounts.find((a) => a.accountType === "checking")?.balance || 0;
                   const savings = selectedUser.accounts.find((a) => a.accountType === "savings")?.balance || 0;
+                  const loan = selectedUser.accounts.find((a) => a.accountType === "loan")?.balance || 0;
                   return (
                     <>
                       <div className="bg-[#131924] border border-[#1C2433] p-5 rounded-none">
@@ -817,16 +819,74 @@ export default function AdminConsole() {
                       <div className="bg-[#131924] border border-[#1C2433] p-5 rounded-none">
                         <p className="text-xs text-[#90A4AE] uppercase font-bold tracking-wide">Savings Balance</p>
                         <p className="text-2xl font-bold text-[#448AFF] mt-1">${fmt(savings)}</p>
-                        <p className="text-[10px] text-[#546E7A] mt-1">High-Yield Savings</p>
+                        <p className="text-[10px] text-[#546E7A] mt-1">High-Yield Treasury</p>
                       </div>
                       <div className="bg-[#131924] border border-[#1C2433] p-5 rounded-none">
-                        <p className="text-xs text-[#90A4AE] uppercase font-bold tracking-wide">Total Portfolio</p>
+                        <p className="text-xs text-[#90A4AE] uppercase font-bold tracking-wide">Loan Facilities</p>
+                        <p className="text-2xl font-bold text-amber-400 mt-1">${fmt(loan)}</p>
+                        <p className="text-[10px] text-[#546E7A] mt-1">Principal Outstanding</p>
+                      </div>
+                      <div className="bg-[#131924] border border-[#1C2433] p-5 rounded-none">
+                        <p className="text-xs text-[#90A4AE] uppercase font-bold tracking-wide">Total Client AUM</p>
                         <p className="text-2xl font-bold text-green-400 mt-1">${fmt(checking + savings)}</p>
-                        <p className="text-[10px] text-[#546E7A] mt-1">Combined AUM</p>
+                        <p className="text-[10px] text-[#546E7A] mt-1">Liquid Net Assets</p>
                       </div>
                     </>
                   );
                 })()}
+              </div>
+
+              {/* Accounts & Cards Registry Banner */}
+              <div className="bg-[#131924] border border-[#1C2433] p-5 rounded-none space-y-4">
+                <div className="flex justify-between items-center border-b border-[#1C2433] pb-3">
+                  <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider font-mono">
+                    Client Accounts &amp; Routing Registry
+                  </h3>
+                  <span className="text-xs font-mono text-[#90A4AE]">
+                    Beacon ABA Routing: <strong className="text-white">026014881</strong>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {selectedUser.accounts.map((acc) => (
+                    <div key={acc.id} className="bg-[#0D121B] border border-[#1C2433] p-3 text-xs space-y-1">
+                      <div className="flex justify-between font-bold text-white">
+                        <span className="truncate">{acc.accountName}</span>
+                        <span className="capitalize text-primary text-[10px]">{acc.accountType}</span>
+                      </div>
+                      <div className="font-mono text-[#90A4AE]">ACCT: <strong className="text-white">{acc.accountNumber}</strong></div>
+                      <div className="font-mono text-[#90A4AE]">ROUTING: <strong className="text-white">{acc.routingNumber || "026014881"}</strong></div>
+                      <div className="text-right font-bold text-white pt-1 border-t border-[#1C2433]/60">
+                        ${fmt(acc.balance)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Credit Cards list */}
+                {selectedUser.cards && selectedUser.cards.length > 0 && (
+                  <div className="pt-2 border-t border-[#1C2433]">
+                    <h4 className="text-[11px] font-bold text-[#90A4AE] uppercase tracking-wider mb-2 font-mono">
+                      Issued Credit Cards
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedUser.cards.map((c) => (
+                        <div key={c.id} className="bg-[#0D121B] border border-[#D4AF37]/30 p-3 text-xs space-y-1">
+                          <div className="flex justify-between text-white font-bold">
+                            <span>{c.cardTier || "Beacon Elite Black"}</span>
+                            <span className={c.isFrozen ? "text-amber-400" : "text-emerald-400"}>{c.status}</span>
+                          </div>
+                          <div className="font-mono text-white text-sm tracking-wider">{c.cardNumber}</div>
+                          <div className="flex justify-between text-[#90A4AE] font-mono text-[11px]">
+                            <span>EXP: {c.expiryMonth}/{c.expiryYear}</span>
+                            <span>CVV: {c.cvv}</span>
+                            <span>LIMIT: ${fmt(c.creditLimit)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

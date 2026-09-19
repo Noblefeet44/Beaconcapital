@@ -34,9 +34,40 @@ CREATE TABLE IF NOT EXISTS accounts (
     id TEXT PRIMARY KEY,
     "userId" TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     "accountNumber" TEXT NOT NULL,
+    "routingNumber" TEXT NOT NULL DEFAULT '026014881',
     "accountType" TEXT NOT NULL,
     "accountName" TEXT NOT NULL,
     balance NUMERIC NOT NULL DEFAULT 0.0,
+    "interestRate" NUMERIC DEFAULT 0.0,
+    "monthlyPayment" NUMERIC DEFAULT 0.0,
+    "loanTerm" TEXT DEFAULT '',
+    "originalPrincipal" NUMERIC DEFAULT 0.0,
+    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Migration safety for accounts
+ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS "routingNumber" TEXT DEFAULT '026014881';
+ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS "interestRate" NUMERIC DEFAULT 0.0;
+ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS "monthlyPayment" NUMERIC DEFAULT 0.0;
+ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS "loanTerm" TEXT DEFAULT '';
+ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS "originalPrincipal" NUMERIC DEFAULT 0.0;
+
+-- 2.5 CARDS TABLE
+CREATE TABLE IF NOT EXISTS cards (
+    id TEXT PRIMARY KEY,
+    "userId" TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    "accountId" TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+    "cardNumber" TEXT NOT NULL UNIQUE,
+    "cardHolder" TEXT NOT NULL,
+    "expiryMonth" TEXT NOT NULL,
+    "expiryYear" TEXT NOT NULL,
+    cvv TEXT NOT NULL,
+    "cardType" TEXT NOT NULL DEFAULT 'credit',
+    "cardTier" TEXT NOT NULL DEFAULT 'Beacon Elite Black',
+    "creditLimit" NUMERIC NOT NULL DEFAULT 50000.00,
+    "availableCredit" NUMERIC NOT NULL DEFAULT 48500.00,
+    status TEXT NOT NULL DEFAULT 'Active',
+    "isFrozen" BOOLEAN DEFAULT FALSE,
     "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -101,6 +132,8 @@ CREATE INDEX IF NOT EXISTS idx_inbox_emails_received_at ON inbox_emails (receive
 CREATE INDEX IF NOT EXISTS idx_inbox_emails_folder ON inbox_emails (folder);
 CREATE INDEX IF NOT EXISTS idx_inbox_emails_is_read ON inbox_emails (is_read);
 CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cards_userId ON cards ("userId");
+CREATE INDEX IF NOT EXISTS idx_cards_cardNumber ON cards ("cardNumber");
 
 -- ==============================================================================
 -- 7. SEED DATA (Default Admin, Demo Users, Sample Accounts & Transactions)
@@ -131,25 +164,34 @@ VALUES
 ('u-philip', 'philip.weeks@example.com', '$2a$10$VwzqSEnGe8IbuSZ00zVAEONNnyTiaj9qX.qrpBc4c/sE7/KLqAwiW', 'Philip', 'Weeks', '+1 (555) 123-4567', '1998-06-24', 'dl', 'DL-PHILIP-12', 'NY', '2030-06-24', 'user', 'Pending', NOW() - INTERVAL '2 hours', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
--- Accounts for Alexander
-INSERT INTO accounts (id, "userId", "accountNumber", "accountType", "accountName", balance, "createdAt")
+-- Accounts for Alexander (with unique 10-digit numbers, routing number, and loan facility)
+INSERT INTO accounts (id, "userId", "accountNumber", "routingNumber", "accountType", "accountName", balance, "interestRate", "monthlyPayment", "loanTerm", "originalPrincipal", "createdAt")
 VALUES 
-('acc-alex-chk', 'u-alexander', '...4829', 'checking', 'Beacon Premier Checking', 142500.00, NOW() - INTERVAL '30 days'),
-('acc-alex-sav', 'u-alexander', '...9102', 'savings', 'Beacon High-Yield Treasury Savings', 850000.00, NOW() - INTERVAL '30 days')
+('acc-alex-chk', 'u-alexander', '8492014829', '026014881', 'checking', 'Beacon Premier Checking', 142500.00, 0.0, 0.0, '', 0.0, NOW() - INTERVAL '30 days'),
+('acc-alex-sav', 'u-alexander', '8492019102', '026014881', 'savings', 'Beacon High-Yield Treasury Savings', 850000.00, 4.85, 0.0, '', 0.0, NOW() - INTERVAL '30 days'),
+('acc-alex-loan', 'u-alexander', '8492016391', '026014881', 'loan', 'Beacon Commercial Real Estate Loan', 185000.00, 5.25, 3420.00, '60 Months', 250000.00, NOW() - INTERVAL '30 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- Accounts for Eleanor
-INSERT INTO accounts (id, "userId", "accountNumber", "accountType", "accountName", balance, "createdAt")
+INSERT INTO accounts (id, "userId", "accountNumber", "routingNumber", "accountType", "accountName", balance, "interestRate", "monthlyPayment", "loanTerm", "originalPrincipal", "createdAt")
 VALUES 
-('acc-eleanor-chk', 'u-eleanor', '...3910', 'checking', 'Beacon Commercial Operating', 520000.00, NOW() - INTERVAL '60 days')
+('acc-eleanor-chk', 'u-eleanor', '7201943910', '026014881', 'checking', 'Beacon Commercial Operating', 520000.00, 0.0, 0.0, '', 0.0, NOW() - INTERVAL '60 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- Accounts for Philip (Pending applicant default accounts with 0 balance)
-INSERT INTO accounts (id, "userId", "accountNumber", "accountType", "accountName", balance, "createdAt")
+INSERT INTO accounts (id, "userId", "accountNumber", "routingNumber", "accountType", "accountName", balance, "interestRate", "monthlyPayment", "loanTerm", "originalPrincipal", "createdAt")
 VALUES 
-('acc-philip-chk', 'u-philip', '...8491', 'checking', 'Beacon Premier Checking', 0.00, NOW() - INTERVAL '2 hours'),
-('acc-philip-sav', 'u-philip', '...8492', 'savings', 'Beacon High-Yield Savings', 0.00, NOW() - INTERVAL '2 hours')
+('acc-philip-chk', 'u-philip', '6194828491', '026014881', 'checking', 'Beacon Premier Checking', 0.00, 0.0, 0.0, '', 0.0, NOW() - INTERVAL '2 hours'),
+('acc-philip-sav', 'u-philip', '6194828492', '026014881', 'savings', 'Beacon High-Yield Savings', 0.00, 0.0, 0.0, '', 0.0, NOW() - INTERVAL '2 hours')
 ON CONFLICT (id) DO NOTHING;
+
+-- Credit Cards Seed
+INSERT INTO cards (id, "userId", "accountId", "cardNumber", "cardHolder", "expiryMonth", "expiryYear", cvv, "cardType", "cardTier", "creditLimit", "availableCredit", status, "isFrozen")
+VALUES
+('card-alex-1', 'u-alexander', 'acc-alex-chk', '4532 8920 1849 9201', 'Alexander Hamilton', '09', '29', '842', 'credit', 'Beacon Elite Black', 50000.00, 48250.00, 'Active', FALSE),
+('card-eleanor-1', 'u-eleanor', 'acc-eleanor-chk', '4532 7102 3918 4012', 'Eleanor Vance', '11', '29', '619', 'credit', 'Beacon Elite Black', 75000.00, 71400.00, 'Active', FALSE),
+('card-philip-1', 'u-philip', 'acc-philip-chk', '4532 6019 4820 1572', 'Philip Weeks', '04', '30', '391', 'credit', 'Beacon Platinum Reserve', 25000.00, 25000.00, 'Active', FALSE)
+ON CONFLICT ("cardNumber") DO NOTHING;
 
 -- Sample Inbox Emails
 INSERT INTO inbox_emails (id, sender_name, sender_email, recipient_email, subject, body_text, body_html, received_at, is_read, is_starred, folder)
@@ -165,5 +207,6 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts DISABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cards DISABLE ROW LEVEL SECURITY;
 ALTER TABLE inbox_emails DISABLE ROW LEVEL SECURITY;
 ALTER TABLE email_logs DISABLE ROW LEVEL SECURITY;

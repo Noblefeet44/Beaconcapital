@@ -15,10 +15,12 @@ export async function GET(req: NextRequest) {
     );
     const usersWithAccounts = await Promise.all(users.map(async (u) => {
       const accounts = await db.getAccounts(u.id);
+      const cards = await db.getCards(u.id);
       return {
         ...u,
         passwordHash: undefined, // Hide password hashes
         accounts,
+        cards,
       };
     }));
 

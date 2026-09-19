@@ -3,20 +3,42 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Account, Transaction } from "@/lib/db";
+import { Account, Transaction, Card } from "@/lib/db";
 
 export default function AccountDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [routingNumber, setRoutingNumber] = useState("026014881");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Card interactive state
+  const [showCardNumber, setShowCardNumber] = useState(false);
+  const [showCvv, setShowCvv] = useState(false);
+  const [cardFreezeLoading, setCardFreezeLoading] = useState(false);
+  const [copiedMap, setCopiedMap] = useState<{ [key: string]: boolean }>({});
 
   // Quick Action Modal states
   const [activeModal, setActiveModal] = useState<"transfer" | "zelle" | "billpay" | "deposit" | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
   const [modalSuccess, setModalSuccess] = useState("");
+
+  // Loan Modal states
+  const [activeLoanModal, setActiveLoanModal] = useState<"pay" | "apply" | null>(null);
+  const [loanLoading, setLoanLoading] = useState(false);
+  const [loanError, setLoanError] = useState("");
+  const [loanSuccess, setLoanSuccess] = useState("");
+  const [loanFormData, setLoanFormData] = useState({
+    loanAccountId: "",
+    sourceAccountId: "",
+    amount: "",
+    loanName: "",
+    termMonths: "60",
+    purpose: "Commercial Real Estate",
+  });
 
   // Hamburger drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,15 +73,32 @@ export default function AccountDashboard() {
         return;
       }
       setUser(data.user);
-      setAccounts(data.accounts);
+      setAccounts(data.accounts || []);
+      setCards(data.cards || []);
+      if (data.routingNumber) {
+        setRoutingNumber(data.routingNumber);
+      }
 
       // Pre-fill default account selections in forms
-      if (data.accounts.length > 0) {
+      if (data.accounts && data.accounts.length > 0) {
+        const nonLoanAccs = data.accounts.filter((a: any) => a.accountType !== "loan");
+        const defaultSource = nonLoanAccs[0] || data.accounts[0];
+        const defaultTarget = nonLoanAccs.length > 1 ? nonLoanAccs[1] : defaultSource;
         setFormData((prev) => ({
           ...prev,
-          sourceAccountId: data.accounts[0].id,
-          targetAccountId: data.accounts.length > 1 ? data.accounts[1].id : data.accounts[0].id,
+          sourceAccountId: defaultSource.id,
+          targetAccountId: defaultTarget.id,
         }));
+
+        const loanAcc = data.accounts.find((a: any) => a.accountType === "loan");
+        if (loanAcc) {
+          setLoanFormData((prev) => ({
+            ...prev,
+            loanAccountId: loanAcc.id,
+            sourceAccountId: defaultSource.id,
+            amount: (loanAcc.monthlyPayment || 3420).toString(),
+          }));
+        }
       }
 
       // Fetch recent transactions
@@ -78,6 +117,115 @@ export default function AccountDashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const handleCopy = (text: string, key: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const el = document.createElement("textarea");
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopiedMap((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setCopiedMap((prev) => ({ ...prev, [key]: false }));
+    }, 2000);
+  };
+
+  const handleToggleCardFreeze = async (card: Card) => {
+    setCardFreezeLoading(true);
+    try {
+      const nextFrozen = !card.isFrozen;
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: card.id, action: nextFrozen ? "freeze" : "unfreeze" }),
+      });
+      if (res.ok) {
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === card.id
+              ? { ...c, isFrozen: nextFrozen, status: nextFrozen ? "Frozen" : "Active" }
+              : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling card freeze:", err);
+    } finally {
+      setCardFreezeLoading(false);
+    }
+  };
+
+  const handleLoanPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoanLoading(true);
+    setLoanError("");
+    setLoanSuccess("");
+    try {
+      const res = await fetch("/api/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "pay",
+          loanAccountId: loanFormData.loanAccountId,
+          sourceAccountId: loanFormData.sourceAccountId,
+          amount: loanFormData.amount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Payment failed");
+      setLoanSuccess(`Payment of $${parseFloat(loanFormData.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })} processed successfully.`);
+      await fetchDashboardData();
+      setTimeout(() => {
+        setActiveLoanModal(null);
+        setLoanSuccess("");
+      }, 1600);
+    } catch (err: any) {
+      setLoanError(err.message || "Loan payment failed");
+    } finally {
+      setLoanLoading(false);
+    }
+  };
+
+  const handleLoanApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoanLoading(true);
+    setLoanError("");
+    setLoanSuccess("");
+    try {
+      const res = await fetch("/api/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "apply",
+          loanName: `Beacon ${loanFormData.purpose} Facility`,
+          amount: loanFormData.amount,
+          interestRate: 5.25,
+          termMonths: loanFormData.termMonths,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Application failed");
+      setLoanSuccess("Institutional facility approved and active in your client portfolio.");
+      await fetchDashboardData();
+      setTimeout(() => {
+        setActiveLoanModal(null);
+        setLoanSuccess("");
+      }, 1600);
+    } catch (err: any) {
+      setLoanError(err.message || "Loan application failed");
+    } finally {
+      setLoanLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -782,37 +930,490 @@ export default function AccountDashboard() {
             </div>
           </section>
 
-          {/* Accounts Stack */}
+          {/* ── Luxury Credit Card Section ── */}
           <section className="flex flex-col gap-sm">
-            <h2 className="font-headline-md text-headline-md text-on-background border-b border-surface-dim pb-sm mb-xs">Your Accounts</h2>
+            <div className="flex justify-between items-center border-b border-surface-dim pb-sm mb-xs">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-xl">credit_card</span>
+                <h2 className="font-headline-md text-headline-md text-on-background">Beacon Private Client Cards</h2>
+              </div>
+              <span className="text-[11px] font-mono uppercase tracking-widest px-2.5 py-1 bg-primary/10 text-primary border border-primary/30 font-bold">
+                Direct Cardholder Access
+              </span>
+            </div>
 
-            {accounts.map((acc) => (
-              <Link
-                key={acc.id}
-                href={`/dashboard/transactions?accountId=${acc.id}`}
-                className="bg-surface-container-lowest border border-surface-dim rounded-none p-4 md:p-6 hover:border-primary transition-colors cursor-pointer group flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-none bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors">
-                    <span className="material-symbols-outlined">
-                      {acc.accountType === "checking" ? "account_balance" : acc.accountType === "savings" ? "savings" : "credit_card"}
-                    </span>
+            {cards.length === 0 ? (
+              <div className="bg-surface-container-lowest border border-surface-dim p-6 text-center text-on-surface-variant">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2">credit_card_off</span>
+                <p className="font-body-md text-body-md">No active cards issued. Provisioning your Beacon Elite Black card...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Visual Luxury Card */}
+                {cards.map((card) => (
+                  <div key={card.id} className="lg:col-span-7 flex flex-col gap-3">
+                    <div className="relative overflow-hidden w-full aspect-[1.586/1] max-w-[460px] bg-gradient-to-br from-[#1b2230] via-[#111722] to-[#0a0d14] text-white p-6 sm:p-7 shadow-2xl border border-[#D4AF37]/40 flex flex-col justify-between group select-none">
+                      {/* Metallic sheen overlay */}
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.18),transparent_60%)] pointer-events-none" />
+                      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_40%,rgba(255,255,255,0.04)_50%,transparent_60%)] pointer-events-none" />
+
+                      {/* Card Top: Bank name & Tier */}
+                      <div className="relative z-10 flex justify-between items-start">
+                        <div>
+                          <div className="font-headline-md text-lg sm:text-xl font-bold tracking-widest text-[#D4AF37] uppercase drop-shadow">
+                            BEACON CAPITAL
+                          </div>
+                          <div className="text-[10px] sm:text-xs text-[#90A4AE] font-mono uppercase tracking-widest font-semibold">
+                            {card.cardTier || "BEACON ELITE BLACK"}
+                          </div>
+                        </div>
+
+                        {/* Status pill */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 text-xs font-mono">
+                          <span className={`w-2 h-2 rounded-full ${card.isFrozen ? "bg-amber-400" : "bg-emerald-400"} animate-pulse`} />
+                          <span className="text-[11px] uppercase tracking-wider font-bold">
+                            {card.isFrozen ? "LOCKED" : "ACTIVE"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Chip & Contactless */}
+                      <div className="relative z-10 flex items-center justify-between my-1 sm:my-2">
+                        {/* EMV Chip graphic */}
+                        <div className="w-12 h-9 bg-gradient-to-br from-[#E6C665] via-[#C9A339] to-[#8C6B1C] rounded-[4px] border border-[#F4DC89]/60 shadow-inner flex flex-col justify-around p-1">
+                          <div className="w-full h-[1px] bg-black/30" />
+                          <div className="w-full h-[1px] bg-black/30" />
+                          <div className="w-full h-[1px] bg-black/30" />
+                        </div>
+                        <span className="material-symbols-outlined text-white/70 text-2xl rotate-90">
+                          contactless
+                        </span>
+                      </div>
+
+                      {/* Card Number */}
+                      <div className="relative z-10 font-mono tracking-widest text-lg sm:text-2xl font-bold text-white/95 flex items-center justify-between">
+                        <span>
+                          {showCardNumber
+                            ? card.cardNumber
+                            : `4532  ••••  ••••  ${card.cardNumber.replace(/\s+/g, "").slice(-4)}`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowCardNumber((prev) => !prev)}
+                          className="text-white/60 hover:text-[#D4AF37] transition-colors p-1"
+                          title={showCardNumber ? "Hide Number" : "Reveal Number"}
+                        >
+                          <span className="material-symbols-outlined text-lg">
+                            {showCardNumber ? "visibility_off" : "visibility"}
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Bottom Row: Holder, Expiry, CVV */}
+                      <div className="relative z-10 flex justify-between items-end pt-2 border-t border-white/10">
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider text-[#90A4AE]">Cardholder</div>
+                          <div className="font-semibold text-xs sm:text-sm tracking-wider uppercase truncate max-w-[170px] text-white">
+                            {card.cardHolder}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <div className="text-[9px] uppercase tracking-wider text-[#90A4AE]">Expires</div>
+                            <div className="font-mono text-xs sm:text-sm font-semibold tracking-wider text-white">
+                              {card.expiryMonth}/{card.expiryYear}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-[9px] uppercase tracking-wider text-[#90A4AE] flex items-center gap-1">
+                              CVV
+                              <button
+                                type="button"
+                                onClick={() => setShowCvv((prev) => !prev)}
+                                className="text-white/60 hover:text-white"
+                              >
+                                <span className="material-symbols-outlined text-[12px]">
+                                  {showCvv ? "visibility_off" : "visibility"}
+                                </span>
+                              </button>
+                            </div>
+                            <div className="font-mono text-xs sm:text-sm font-semibold tracking-wider text-white">
+                              {showCvv ? card.cvv : "•••"}
+                            </div>
+                          </div>
+
+                          <div className="font-serif font-black italic text-lg sm:text-xl text-[#D4AF37] tracking-wider ml-1">
+                            VISA
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Actions Ribbon */}
+                    <div className="flex flex-wrap items-center gap-2 max-w-[460px]">
+                      <button
+                        onClick={(e) => handleCopy(card.cardNumber, `card-num-${card.id}`, e)}
+                        className="flex-1 min-w-[130px] flex items-center justify-center gap-1.5 py-2.5 px-3 bg-surface-container hover:bg-surface-container-high border border-outline text-xs font-bold uppercase tracking-wider text-on-surface transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary">
+                          {copiedMap[`card-num-${card.id}`] ? "check" : "content_copy"}
+                        </span>
+                        <span>{copiedMap[`card-num-${card.id}`] ? "Copied!" : "Copy Card Number"}</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => handleCopy(card.cvv, `card-cvv-${card.id}`, e)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-surface-container hover:bg-surface-container-high border border-outline text-xs font-bold uppercase tracking-wider text-on-surface transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary">
+                          {copiedMap[`card-cvv-${card.id}`] ? "check" : "pin"}
+                        </span>
+                        <span>{copiedMap[`card-cvv-${card.id}`] ? "CVV Copied" : "Copy CVV"}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleCardFreeze(card)}
+                        disabled={cardFreezeLoading}
+                        className={`flex items-center justify-center gap-1.5 py-2.5 px-3 border text-xs font-bold uppercase tracking-wider transition-colors ${
+                          card.isFrozen
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/40 hover:bg-amber-500/20"
+                            : "bg-surface-container hover:bg-red-900/20 text-on-surface hover:text-red-400 border-outline"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {card.isFrozen ? "lock_open" : "lock"}
+                        </span>
+                        <span>{card.isFrozen ? "Unlock Card" : "Freeze Card"}</span>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-body-lg text-body-lg font-semibold text-on-background">{acc.accountName}</h3>
-                    <p className="font-body-md text-body-md text-on-surface-variant text-sm">{acc.accountNumber}</p>
+                ))}
+
+                {/* Card Limit & Benefits Panel */}
+                <div className="lg:col-span-5 bg-surface-container-lowest border border-surface-dim p-5 sm:p-6 space-y-4">
+                  <div className="border-b border-surface-dim pb-3">
+                    <h3 className="font-headline-sm text-sm font-bold uppercase tracking-wider text-on-background">
+                      Credit Limit &amp; Spending Power
+                    </h3>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      Private Client Revolving Line of Credit
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs text-on-surface-variant uppercase font-semibold">Available Credit</span>
+                      <span className="font-headline-sm text-base font-bold text-[#2E7D32]">
+                        ${(cards[0]?.availableCredit || 48500).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-surface-container h-2.5 overflow-hidden">
+                      <div
+                        className="bg-primary h-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(100, Math.max(5, (((cards[0]?.creditLimit || 50000) - (cards[0]?.availableCredit || 48500)) / (cards[0]?.creditLimit || 50000)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between text-[11px] text-on-surface-variant pt-1">
+                      <span>Used: ${((cards[0]?.creditLimit || 50000) - (cards[0]?.availableCredit || 48500)).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                      <span className="font-semibold text-on-surface">
+                        Total Limit: ${(cards[0]?.creditLimit || 50000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-surface-dim space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-on-surface">
+                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
+                      <span>Zero foreign transaction exchange surcharge</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-on-surface">
+                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
+                      <span>24/7 dedicated institutional concierge &amp; wire priority</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-on-surface">
+                      <span className="material-symbols-outlined text-[#2E7D32] text-sm">check_circle</span>
+                      <span>Protected under Federal Reg E &amp; Chip-and-PIN Tokenization</span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className={`font-headline-md text-headline-md font-bold ${acc.balance < 0 ? "text-primary" : "text-on-background"}`}>
-                    {acc.balance < 0 ? "-" : ""}${Math.abs(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </div>
+            )}
+          </section>
+
+          {/* ── Institutional Accounts Stack with Direct Copy Buttons ── */}
+          <section className="flex flex-col gap-sm">
+            <div className="flex justify-between items-center border-b border-surface-dim pb-sm mb-xs">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-xl">account_balance</span>
+                <h2 className="font-headline-md text-headline-md text-on-background">Your Accounts</h2>
+              </div>
+              <span className="text-xs font-mono text-on-surface-variant">
+                Routing: <strong className="text-primary font-bold">{routingNumber}</strong>
+              </span>
+            </div>
+
+            {accounts.map((acc) => {
+              const isLoan = acc.accountType === "loan";
+              return (
+                <div
+                  key={acc.id}
+                  className="bg-surface-container-lowest border border-surface-dim rounded-none p-4 md:p-6 hover:border-primary transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                >
+                  {/* Account Identity */}
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-none bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-fixed transition-colors shrink-0 mt-0.5 md:mt-0">
+                      <span className="material-symbols-outlined">
+                        {isLoan
+                          ? "request_quote"
+                          : acc.accountType === "checking"
+                          ? "account_balance"
+                          : acc.accountType === "savings"
+                          ? "savings"
+                          : "credit_card"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/dashboard/transactions?accountId=${acc.id}`}
+                          className="font-body-lg text-body-lg font-semibold text-on-background hover:text-primary transition-colors"
+                        >
+                          {acc.accountName}
+                        </Link>
+                        {isLoan && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                            Credit Facility
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Numbers & Copy Buttons Bar */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-0.5">
+                        {/* Account Number */}
+                        <div className="inline-flex items-center gap-1.5 bg-surface-container/60 px-2 py-1 border border-outline/30">
+                          <span className="text-[11px] text-on-surface-variant font-mono font-medium">ACCT:</span>
+                          <span className="font-mono text-xs text-on-background font-bold tracking-wider">
+                            {acc.accountNumber}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopy(acc.accountNumber, `acc-${acc.id}`, e)}
+                            className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-surface-container-high hover:bg-primary hover:text-on-primary text-primary transition-colors"
+                            title="Copy Account Number"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">
+                              {copiedMap[`acc-${acc.id}`] ? "check" : "content_copy"}
+                            </span>
+                            <span>{copiedMap[`acc-${acc.id}`] ? "Copied" : "Copy"}</span>
+                          </button>
+                        </div>
+
+                        {/* Routing Number */}
+                        <div className="inline-flex items-center gap-1.5 bg-surface-container/60 px-2 py-1 border border-outline/30">
+                          <span className="text-[11px] text-on-surface-variant font-mono font-medium">ROUTING:</span>
+                          <span className="font-mono text-xs text-on-background font-bold tracking-wider">
+                            {acc.routingNumber || routingNumber}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopy(acc.routingNumber || routingNumber, `rt-${acc.id}`, e)}
+                            className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-surface-container-high hover:bg-primary hover:text-on-primary text-primary transition-colors"
+                            title="Copy Routing Number"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">
+                              {copiedMap[`rt-${acc.id}`] ? "check" : "content_copy"}
+                            </span>
+                            <span>{copiedMap[`rt-${acc.id}`] ? "Copied" : "Copy"}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Loan Terms Sub-bar */}
+                      {isLoan && (
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-on-surface-variant pt-1 font-mono">
+                          <span>Rate: <strong className="text-on-background">{acc.interestRate || 5.25}% Fixed APR</strong></span>
+                          <span>•</span>
+                          <span>Installment: <strong className="text-on-background">${(acc.monthlyPayment || 3420).toLocaleString("en-US", { minimumFractionDigits: 2 })}/mo</strong></span>
+                          <span>•</span>
+                          <span>Term: <strong className="text-on-background">{acc.loanTerm || "60 Months"}</strong></span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant uppercase">
-                    {acc.accountType === "credit" ? "Current Balance" : "Available Balance"}
+
+                  {/* Account Balance & Action */}
+                  <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 border-surface-dim pt-3 md:pt-0 shrink-0">
+                    <div className="text-left md:text-right">
+                      <div className={`font-headline-md text-headline-md font-bold ${isLoan ? "text-amber-400" : acc.balance < 0 ? "text-primary" : "text-on-background"}`}>
+                        ${Math.abs(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </div>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant uppercase">
+                        {isLoan ? "Principal Balance" : acc.accountType === "credit" ? "Current Balance" : "Available Balance"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      {isLoan ? (
+                        <button
+                          onClick={() => {
+                            setLoanFormData((prev) => ({
+                              ...prev,
+                              loanAccountId: acc.id,
+                              amount: (acc.monthlyPayment || 3420).toString(),
+                            }));
+                            setActiveLoanModal("pay");
+                            setLoanError("");
+                            setLoanSuccess("");
+                          }}
+                          className="px-3 py-1.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">payments</span>
+                          <span>Pay Loan</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/dashboard/transactions?accountId=${acc.id}`}
+                          className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold uppercase tracking-wider flex items-center gap-1 border border-outline transition-colors"
+                        >
+                          <span>Ledger</span>
+                          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+
+          {/* ── Institutional Credit & Loan Facility Section ── */}
+          <section className="bg-surface-container-lowest border border-surface-dim p-6 premium-shadow space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-surface-dim pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#D4AF37]">account_balance_wallet</span>
+                  <h2 className="font-headline-md text-headline-md text-on-background">
+                    Institutional Credit &amp; Term Facilities
+                  </h2>
+                </div>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Structured commercial lending, real estate senior credit, and revolving operational liquidity.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setActiveLoanModal("apply");
+                    setLoanError("");
+                    setLoanSuccess("");
+                  }}
+                  className="px-4 py-2.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>Apply for Facility</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Loan Facility Cards or Placeholder */}
+            {accounts.some((a) => a.accountType === "loan") ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {accounts.filter((a) => a.accountType === "loan").map((loan) => (
+                  <div
+                    key={loan.id}
+                    className="bg-surface-container-low border border-surface-dim p-5 flex flex-col justify-between space-y-4"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider font-mono">
+                          Senior Secured Facility
+                        </span>
+                        <span className="text-[11px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          Active &amp; Performing
+                        </span>
+                      </div>
+                      <h3 className="font-headline-sm text-base font-bold text-on-background mt-1">
+                        {loan.accountName}
+                      </h3>
+                      <p className="text-xs text-on-surface-variant font-mono mt-0.5">
+                        Acct: {loan.accountNumber} • Routing: {loan.routingNumber || routingNumber}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 py-3 border-y border-surface-dim text-center">
+                      <div>
+                        <div className="text-[10px] text-on-surface-variant uppercase">Principal Due</div>
+                        <div className="font-headline-sm text-sm font-bold text-on-background mt-0.5">
+                          ${loan.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-on-surface-variant uppercase">Fixed APR</div>
+                        <div className="font-headline-sm text-sm font-bold text-[#D4AF37] mt-0.5">
+                          {loan.interestRate || 5.25}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-on-surface-variant uppercase">Monthly Due</div>
+                        <div className="font-headline-sm text-sm font-bold text-on-background mt-0.5">
+                          ${(loan.monthlyPayment || 3420).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-xs text-on-surface-variant font-mono">
+                        Term: {loan.loanTerm || "60 Months"}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setLoanFormData((prev) => ({
+                            ...prev,
+                            loanAccountId: loan.id,
+                            amount: (loan.monthlyPayment || 3420).toString(),
+                          }));
+                          setActiveLoanModal("pay");
+                        }}
+                        className="px-4 py-2 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">payment</span>
+                        <span>Pay Installment</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 bg-surface-container-low border border-surface-dim flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="font-body-lg text-body-lg font-bold text-on-background">
+                    Tailored Institutional Capital for Your Enterprise
+                  </h4>
+                  <p className="text-xs text-on-surface-variant max-w-xl">
+                    Fast-track debt financing up to $5,000,000.00 with transparent amortization schedules, competitive benchmark rates, and dedicated structuring teams.
                   </p>
                 </div>
-              </Link>
-            ))}
+                <button
+                  onClick={() => {
+                    setActiveLoanModal("apply");
+                    setLoanError("");
+                    setLoanSuccess("");
+                  }}
+                  className="px-5 py-2.5 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider shrink-0 transition-colors"
+                >
+                  Start Loan Application
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Recent Transactions list */}
@@ -1046,6 +1647,258 @@ export default function AccountDashboard() {
                   className="px-lg py-sm btn-primary font-label-sm text-label-sm uppercase tracking-wider disabled:bg-primary/50"
                 >
                   {modalLoading ? "Executing..." : "Submit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Loan Payment Modal ── */}
+      {activeLoanModal === "pay" && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest border border-surface-variant max-w-[500px] w-full p-6 shadow-2xl space-y-4">
+            <div className="border-b border-surface-variant pb-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-xl">payments</span>
+                <h3 className="font-headline-md text-base font-bold uppercase tracking-wider text-primary">
+                  Make Loan Installment Payment
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveLoanModal(null)}
+                className="text-on-surface-variant hover:text-on-background p-1"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {loanError && (
+              <div className="bg-red-950/40 border border-red-500/60 text-red-300 text-xs p-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-red-400 text-lg">error</span>
+                <span>{loanError}</span>
+              </div>
+            )}
+
+            {loanSuccess && (
+              <div className="bg-emerald-950/40 border border-emerald-500/60 text-emerald-300 text-xs p-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
+                <span>{loanSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLoanPayment} className="space-y-4">
+              {/* Target Loan Facility */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Target Loan Facility
+                </label>
+                <select
+                  className="w-full py-2 px-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none"
+                  value={loanFormData.loanAccountId}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, loanAccountId: e.target.value })}
+                  required
+                >
+                  {accounts.filter((a) => a.accountType === "loan").map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.accountName} (Due: ${a.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Source Account */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Pay From (Checking / Savings)
+                </label>
+                <select
+                  className="w-full py-2 px-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none"
+                  value={loanFormData.sourceAccountId}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, sourceAccountId: e.target.value })}
+                  required
+                >
+                  {accounts.filter((a) => a.accountType !== "loan" && a.accountType !== "credit").map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.accountName} (${a.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })} Available)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Payment Amount (USD)
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant text-sm">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1.00"
+                    className="w-full py-2 pl-8 pr-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none font-mono"
+                    placeholder="0.00"
+                    value={loanFormData.amount}
+                    onChange={(e) => setLoanFormData({ ...loanFormData, amount: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-surface-variant">
+                <button
+                  type="button"
+                  onClick={() => setActiveLoanModal(null)}
+                  className="px-4 py-2 border border-outline text-xs font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loanLoading}
+                  className="px-5 py-2 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider disabled:bg-primary/50 flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">payments</span>
+                  <span>{loanLoading ? "Settling..." : "Settle Payment"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Loan Application Modal ── */}
+      {activeLoanModal === "apply" && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest border border-surface-variant max-w-[540px] w-full p-6 shadow-2xl space-y-4">
+            <div className="border-b border-surface-variant pb-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#D4AF37] text-xl">account_balance</span>
+                <h3 className="font-headline-md text-base font-bold uppercase tracking-wider text-on-background">
+                  Apply for Institutional Debt Facility
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveLoanModal(null)}
+                className="text-on-surface-variant hover:text-on-background p-1"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {loanError && (
+              <div className="bg-red-950/40 border border-red-500/60 text-red-300 text-xs p-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-red-400 text-lg">error</span>
+                <span>{loanError}</span>
+              </div>
+            )}
+
+            {loanSuccess && (
+              <div className="bg-emerald-950/40 border border-emerald-500/60 text-emerald-300 text-xs p-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
+                <span>{loanSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLoanApply} className="space-y-4">
+              {/* Facility Purpose */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Facility Purpose / Strategy
+                </label>
+                <select
+                  className="w-full py-2 px-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none"
+                  value={loanFormData.purpose}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, purpose: e.target.value })}
+                  required
+                >
+                  <option value="Commercial Real Estate">Commercial Real Estate Senior Loan</option>
+                  <option value="Corporate Working Capital">Corporate Working Capital Revolver</option>
+                  <option value="Private Credit Bridge">Private Credit Bridge Facility</option>
+                  <option value="Equipment & Machinery">Institutional Equipment Financing</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Desired Amount */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Requested Amount (USD)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant text-sm">$</span>
+                    <input
+                      type="number"
+                      step="5000"
+                      min="5000"
+                      className="w-full py-2 pl-8 pr-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none font-mono"
+                      placeholder="100000"
+                      value={loanFormData.amount}
+                      onChange={(e) => setLoanFormData({ ...loanFormData, amount: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Term */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Term Duration
+                  </label>
+                  <select
+                    className="w-full py-2 px-3 text-sm text-on-surface bg-surface border border-outline focus:outline-none"
+                    value={loanFormData.termMonths}
+                    onChange={(e) => setLoanFormData({ ...loanFormData, termMonths: e.target.value })}
+                    required
+                  >
+                    <option value="12">12 Months (1 Year)</option>
+                    <option value="36">36 Months (3 Years)</option>
+                    <option value="60">60 Months (5 Years)</option>
+                    <option value="120">120 Months (10 Years)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Estimate Breakdown Box */}
+              <div className="bg-surface-container p-3 border border-outline/40 space-y-1 text-xs font-mono">
+                <div className="flex justify-between text-on-surface-variant">
+                  <span>Interest Rate:</span>
+                  <span className="font-bold text-on-background">5.25% Fixed APR</span>
+                </div>
+                <div className="flex justify-between text-on-surface-variant">
+                  <span>Origination Fee:</span>
+                  <span className="font-bold text-emerald-400">0.00% (Waived for Private Clients)</span>
+                </div>
+                {loanFormData.amount && (
+                  <div className="flex justify-between pt-1 border-t border-outline/30 text-primary font-bold">
+                    <span>Est. Monthly Installment:</span>
+                    <span>
+                      ${(
+                        (parseFloat(loanFormData.amount || "0") * (0.0525 / 12) * Math.pow(1 + 0.0525 / 12, parseInt(loanFormData.termMonths || "60"))) /
+                        (Math.pow(1 + 0.0525 / 12, parseInt(loanFormData.termMonths || "60")) - 1)
+                      ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      /mo
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-surface-variant">
+                <button
+                  type="button"
+                  onClick={() => setActiveLoanModal(null)}
+                  className="px-4 py-2 border border-outline text-xs font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loanLoading}
+                  className="px-5 py-2 bg-primary hover:bg-[#8f0013] text-white text-xs font-bold uppercase tracking-wider disabled:bg-primary/50 flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  <span>{loanLoading ? "Approving..." : "Submit Application"}</span>
                 </button>
               </div>
             </form>

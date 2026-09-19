@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     const accounts = await db.getAccounts(user.id);
+    const cards = await db.getCards(user.id);
 
     return NextResponse.json({
       success: true,
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
         frozenReason: user.frozenReason,
       },
       accounts,
+      cards,
+      routingNumber: "026014881",
     });
   } catch (error) {
     console.error("Auth Me API Error:", error);

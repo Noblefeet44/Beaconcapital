@@ -60,11 +60,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Auto-create initial checking and savings accounts with 0.00 balance
-    await db.createAccount(user.id, "Beacon Premier Checking", "checking", 0.00);
+    const chk = await db.createAccount(user.id, "Beacon Premier Checking", "checking", 0.00);
     await db.createAccount(user.id, "Beacon High-Yield Savings", "savings", 0.00);
 
-    // Send Application Submitted Email to Applicant
+    // Auto-provision luxury Beacon Elite Black credit card
     const fullName = `${user.firstName} ${user.lastName}`;
+    await db.provisionCardForUser(user.id, fullName, chk?.id);
     await sendEmail({
       to: user.username,
       from: process.env.SENDER_SUPPORT || "Beacon Capital Support <support@beaconcapital.site>",

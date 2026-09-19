@@ -20,13 +20,38 @@ export interface User {
   rejectionReason?: string;
 }
 
+export const DEFAULT_ROUTING_NUMBER = process.env.NEXT_PUBLIC_ROUTING_NUMBER || "026014881";
+
 export interface Account {
   id: string;
   userId: string;
   accountNumber: string;
-  accountType: "checking" | "savings" | "credit";
+  routingNumber?: string;
+  accountType: "checking" | "savings" | "credit" | "loan";
   accountName: string;
   balance: number; // Stored current balance
+  interestRate?: number;
+  monthlyPayment?: number;
+  loanTerm?: string;
+  originalPrincipal?: number;
+  createdAt: string;
+}
+
+export interface Card {
+  id: string;
+  userId: string;
+  accountId?: string;
+  cardNumber: string;
+  cardHolder: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+  cardType: "credit" | "debit";
+  cardTier: string;
+  creditLimit: number;
+  availableCredit: number;
+  status: "Active" | "Frozen" | "Locked";
+  isFrozen: boolean;
   createdAt: string;
 }
 
@@ -145,33 +170,126 @@ export const db = {
   },
 
   // Accounts API
+  async generateUniqueAccountNumber(): Promise<string> {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const prefix = "84" + Math.floor(10 + Math.random() * 90).toString();
+      const suffix = Math.floor(100000 + Math.random() * 900000).toString();
+      const candidate = `${prefix}${suffix}`;
+      try {
+        const { data } = await supabase.from('accounts').select('id').eq('accountNumber', candidate).maybeSingle();
+        if (!data) return candidate;
+      } catch {
+        return candidate;
+      }
+    }
+    return `${Date.now()}`.slice(-10);
+  },
+
   async getAccounts(userId: string): Promise<Account[]> {
     const { data, error } = await supabase.from('accounts').select('*').eq('userId', userId);
-    if (error) return [];
-    return data as Account[];
+    if (error || !data) return [];
+
+    const sanitized = await Promise.all(data.map(async (acc) => {
+      let changed = false;
+      let accountNumber = acc.accountNumber;
+      const routingNumber = acc.routingNumber || DEFAULT_ROUTING_NUMBER;
+
+      if (!accountNumber || accountNumber.startsWith("...") || accountNumber.length < 8) {
+        // Upgrade legacy masked number to a full unique 10-digit number
+        const rawDigits = (accountNumber || "").replace(/[^0-9]/g, "");
+        const suffix = rawDigits.padStart(4, "0").slice(-4);
+        // Unique prefix per account id hash
+        const hash = Math.abs(acc.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 9000) + 1000;
+        accountNumber = `84${hash}${suffix}`.slice(0, 10);
+        changed = true;
+      }
+
+      if (changed) {
+        try {
+          await supabase.from('accounts').update({ 
+            accountNumber, 
+            routingNumber: DEFAULT_ROUTING_NUMBER 
+          }).eq('id', acc.id);
+        } catch {
+          // ignore if column not yet added
+        }
+      }
+
+      return {
+        ...acc,
+        accountNumber,
+        routingNumber,
+        balance: Number(acc.balance) || 0,
+        interestRate: Number(acc.interestRate) || 0,
+        monthlyPayment: Number(acc.monthlyPayment) || 0,
+        loanTerm: acc.loanTerm || "",
+        originalPrincipal: Number(acc.originalPrincipal) || 0,
+      } as Account;
+    }));
+
+    return sanitized;
   },
 
   async getAccountById(id: string): Promise<Account | undefined> {
     const { data, error } = await supabase.from('accounts').select('*').eq('id', id).single();
     if (error || !data) return undefined;
-    return data as Account;
+    return {
+      ...data,
+      routingNumber: data.routingNumber || DEFAULT_ROUTING_NUMBER,
+      balance: Number(data.balance) || 0,
+      interestRate: Number(data.interestRate) || 0,
+      monthlyPayment: Number(data.monthlyPayment) || 0,
+      loanTerm: data.loanTerm || "",
+      originalPrincipal: Number(data.originalPrincipal) || 0,
+    } as Account;
   },
 
-  async createAccount(userId: string, accountName: string, accountType: "checking" | "savings" | "credit", initialBalance = 0): Promise<Account | null> {
-    const cleanLastDigits = Math.floor(1000 + Math.random() * 9000).toString();
+  async createAccount(
+    userId: string,
+    accountName: string,
+    accountType: "checking" | "savings" | "credit" | "loan",
+    initialBalance = 0,
+    loanDetails?: {
+      interestRate?: number;
+      monthlyPayment?: number;
+      loanTerm?: string;
+      originalPrincipal?: number;
+    }
+  ): Promise<Account | null> {
+    const uniqueNumber = await this.generateUniqueAccountNumber();
     const newId = "acc-" + Math.random().toString(36).substring(2, 11);
 
-    const newAccount = {
+    const newAccount: any = {
       id: newId,
       userId,
-      accountNumber: "..." + cleanLastDigits,
+      accountNumber: uniqueNumber,
+      routingNumber: DEFAULT_ROUTING_NUMBER,
       accountType,
       accountName,
       balance: initialBalance,
+      interestRate: loanDetails?.interestRate || 0,
+      monthlyPayment: loanDetails?.monthlyPayment || 0,
+      loanTerm: loanDetails?.loanTerm || "",
+      originalPrincipal: loanDetails?.originalPrincipal || (accountType === "loan" ? initialBalance : 0),
     };
 
-    const { data, error } = await supabase.from('accounts').insert(newAccount).select().single();
+    let { data, error } = await supabase.from('accounts').insert(newAccount).select().single();
     if (error) {
+      // Fallback for installations without custom loan columns
+      const fallbackAccount = {
+        id: newId,
+        userId,
+        accountNumber: uniqueNumber,
+        accountType,
+        accountName,
+        balance: initialBalance,
+      };
+      const retry = await supabase.from('accounts').insert(fallbackAccount).select().single();
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error || !data) {
       console.error('Error creating account:', error);
       return null;
     }
@@ -179,15 +297,178 @@ export const db = {
     if (initialBalance !== 0) {
       await this.createTransaction({
         accountId: newId,
-        title: "Initial Deposit",
-        description: "Account Opening Deposit Balance",
+        title: accountType === "loan" ? "Loan Facility Disbursement" : "Initial Deposit",
+        description: accountType === "loan" ? "Institutional Loan Funding" : "Account Opening Deposit Balance",
         amount: initialBalance,
         status: "Settled",
         effectiveDate: new Date().toISOString().split("T")[0],
       });
     }
 
-    return data as Account;
+    return {
+      ...data,
+      routingNumber: data.routingNumber || DEFAULT_ROUTING_NUMBER,
+    } as Account;
+  },
+
+  // Cards API
+  async generateUniqueCardNumber(): Promise<string> {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const p1 = "4532";
+      const p2 = Math.floor(1000 + Math.random() * 9000).toString();
+      const p3 = Math.floor(1000 + Math.random() * 9000).toString();
+      const p4 = Math.floor(1000 + Math.random() * 9000).toString();
+      const candidate = `${p1} ${p2} ${p3} ${p4}`;
+      try {
+        const { data } = await supabase.from('cards').select('id').eq('cardNumber', candidate).maybeSingle();
+        if (!data) return candidate;
+      } catch {
+        return candidate;
+      }
+    }
+    return `4532 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`;
+  },
+
+  async getCards(userId: string): Promise<Card[]> {
+    try {
+      const { data, error } = await supabase.from('cards').select('*').eq('userId', userId);
+      if (!error && data && data.length > 0) {
+        return data as Card[];
+      }
+    } catch {
+      // continue to fallback
+    }
+
+    // If no card exists yet in table, provision one automatically
+    const user = await this.getUserById(userId);
+    const cardHolder = user ? `${user.firstName} ${user.lastName}`.trim() : "Beacon Client";
+    const accounts = await this.getAccounts(userId);
+    const primaryAccount = accounts.find(a => a.accountType === "checking") || accounts[0];
+
+    const newCard = await this.provisionCardForUser(userId, cardHolder, primaryAccount?.id);
+    return newCard ? [newCard] : [];
+  },
+
+  async provisionCardForUser(userId: string, cardHolder: string, accountId?: string): Promise<Card | null> {
+    const cardNum = await this.generateUniqueCardNumber();
+    const cvv = Math.floor(100 + Math.random() * 900).toString();
+    const newId = "card-" + Math.random().toString(36).substring(2, 11);
+
+    const cardObj: Card = {
+      id: newId,
+      userId,
+      accountId,
+      cardNumber: cardNum,
+      cardHolder: cardHolder || "Valued Client",
+      expiryMonth: "09",
+      expiryYear: "29",
+      cvv,
+      cardType: "credit",
+      cardTier: "Beacon Elite Black",
+      creditLimit: 50000.00,
+      availableCredit: 48750.00,
+      status: "Active",
+      isFrozen: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const { data, error } = await supabase.from('cards').insert(cardObj).select().single();
+      if (!error && data) {
+        return data as Card;
+      }
+    } catch {
+      // table might not exist yet
+    }
+
+    return cardObj;
+  },
+
+  async toggleCardFreeze(cardId: string, isFrozen: boolean): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('cards')
+        .update({ isFrozen, status: isFrozen ? "Frozen" : "Active" })
+        .eq('id', cardId);
+      return !error;
+    } catch {
+      return true;
+    }
+  },
+
+  // Loans API
+  async createLoanAccount(params: {
+    userId: string;
+    loanName: string;
+    amount: number;
+    interestRate: number;
+    termMonths: number;
+  }): Promise<Account | null> {
+    const P = params.amount;
+    const monthlyRate = (params.interestRate / 100) / 12;
+    const n = params.termMonths;
+    const monthlyPayment = monthlyRate > 0 
+      ? parseFloat(((P * (monthlyRate * Math.pow(1 + monthlyRate, n))) / (Math.pow(1 + monthlyRate, n) - 1)).toFixed(2))
+      : parseFloat((P / n).toFixed(2));
+
+    return await this.createAccount(
+      params.userId,
+      params.loanName || "Beacon Commercial Term Loan",
+      "loan",
+      params.amount,
+      {
+        interestRate: params.interestRate,
+        monthlyPayment,
+        loanTerm: `${params.termMonths} Months`,
+        originalPrincipal: params.amount,
+      }
+    );
+  },
+
+  async payLoan(params: {
+    userId: string;
+    loanAccountId: string;
+    sourceAccountId: string;
+    amount: number;
+  }): Promise<{ success: boolean; error?: string }> {
+    const loanAcc = await this.getAccountById(params.loanAccountId);
+    const sourceAcc = await this.getAccountById(params.sourceAccountId);
+
+    if (!loanAcc || loanAcc.accountType !== "loan") {
+      return { success: false, error: "Invalid loan facility account" };
+    }
+    if (!sourceAcc) {
+      return { success: false, error: "Source account not found" };
+    }
+    if (Number(sourceAcc.balance) < params.amount) {
+      return { success: false, error: "Insufficient available funds in source account" };
+    }
+
+    const newSourceBalance = parseFloat((Number(sourceAcc.balance) - params.amount).toFixed(2));
+    const newLoanBalance = Math.max(0, parseFloat((Number(loanAcc.balance) - params.amount).toFixed(2)));
+
+    await supabase.from('accounts').update({ balance: newSourceBalance }).eq('id', sourceAcc.id);
+    await supabase.from('accounts').update({ balance: newLoanBalance }).eq('id', loanAcc.id);
+
+    await this.createTransaction({
+      accountId: sourceAcc.id,
+      title: `Loan Payment - ${loanAcc.accountName}`,
+      description: `Principal & Interest installment towards ${loanAcc.accountNumber}`,
+      amount: -params.amount,
+      status: "Settled",
+      effectiveDate: new Date().toISOString().split("T")[0],
+    });
+
+    await this.createTransaction({
+      accountId: loanAcc.id,
+      title: "Loan Installment Received",
+      description: `Payment received from account ${sourceAcc.accountNumber}`,
+      amount: -params.amount,
+      status: "Settled",
+      effectiveDate: new Date().toISOString().split("T")[0],
+    });
+
+    return { success: true };
   },
 
   // Transactions API
