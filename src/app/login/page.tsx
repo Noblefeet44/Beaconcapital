@@ -1,18 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 
-export default function ConsumerLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberId, setRememberId] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    if (reason === "timeout") {
+      setInfoMessage("Your session expired due to 5 minutes of inactivity. For your security, please sign in again.");
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,26 +56,29 @@ export default function ConsumerLoginPage() {
   };
 
   return (
-    <div className="bg-background min-h-screen flex flex-col antialiased">
-      <PublicHeader />
+    <div className="bg-surface-container-lowest border border-surface-variant p-8 md:p-10 shadow-sm w-full max-w-[420px]">
+      <div className="border-b border-surface-variant pb-4 mb-6">
+        <h1 className="font-headline-lg text-2xl font-bold text-on-background">Client Portal Login</h1>
+        <p className="font-body-md text-xs text-on-surface-variant mt-1">Institutional Account & Ledger Access</p>
+      </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 py-16 px-margin-mobile flex flex-col items-center justify-center">
-        {/* Login Card */}
-        <div className="bg-surface-container-lowest border border-surface-variant p-8 md:p-10 shadow-sm w-full max-w-[420px]">
-          <div className="border-b border-surface-variant pb-4 mb-6">
-            <h1 className="font-headline-lg text-2xl font-bold text-on-background">Client Portal Login</h1>
-            <p className="font-body-md text-xs text-on-surface-variant mt-1">Institutional Account & Ledger Access</p>
-          </div>
+      {infoMessage && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-xs p-3.5 mb-4 rounded flex items-start gap-2.5">
+          <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-base shrink-0 mt-0.5">
+            lock_clock
+          </span>
+          <span className="leading-relaxed font-medium">{infoMessage}</span>
+        </div>
+      )}
 
-          {error && (
-            <div className="bg-error-container border border-error text-error text-xs p-3 mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-error text-base">
-                error
-              </span>
-              <span>{error}</span>
-            </div>
-          )}
+      {error && (
+        <div className="bg-error-container border border-error text-error text-xs p-3 mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error text-base">
+            error
+          </span>
+          <span>{error}</span>
+        </div>
+      )}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {/* User ID Field */}
@@ -148,6 +160,19 @@ export default function ConsumerLoginPage() {
             </p>
           </div>
         </div>
+  );
+}
+
+export default function ConsumerLoginPage() {
+  return (
+    <div className="bg-background min-h-screen flex flex-col antialiased">
+      <PublicHeader />
+
+      {/* Main Content Area */}
+      <main className="flex-1 py-16 px-margin-mobile flex flex-col items-center justify-center">
+        <Suspense fallback={<div className="text-xs text-on-surface-variant">Loading client portal...</div>}>
+          <LoginForm />
+        </Suspense>
 
         {/* Security Badge */}
         <div className="mt-8 flex items-center gap-2 text-xs text-on-surface-variant">
@@ -162,3 +187,4 @@ export default function ConsumerLoginPage() {
     </div>
   );
 }
+

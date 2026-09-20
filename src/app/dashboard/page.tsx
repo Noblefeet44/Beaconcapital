@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Account, Transaction, Card } from "@/lib/db";
 import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
+import AccountInfoModal from "@/components/dashboard/AccountInfoModal";
 
 export default function AccountDashboard() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function AccountDashboard() {
 
   // Hamburger drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [accountInfoOpen, setAccountInfoOpen] = useState(false);
   const [transferExpanded, setTransferExpanded] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -680,6 +682,16 @@ export default function AccountDashboard() {
               {/* Divider */}
               <div className="my-2 border-t border-surface-dim" />
 
+              {/* Profile Page Link */}
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setDrawerOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-primary">person</span>
+                <span className="font-body-md text-body-md font-semibold">My Profile</span>
+              </Link>
+
               {/* Settings — expandable profile panel */}
               <button
                 onClick={() => setSettingsOpen((prev) => !prev)}
@@ -817,6 +829,10 @@ export default function AccountDashboard() {
             <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/deposit">
               <span className="material-symbols-outlined mr-3">add_circle</span>
               <span className="font-body-md text-body-md">Deposit</span>
+            </Link>
+            <Link className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/profile">
+              <span className="material-symbols-outlined mr-3">person</span>
+              <span className="font-body-md text-body-md">My Profile</span>
             </Link>
             <div className="my-2 border-t border-surface-dim" />
             <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200">
@@ -1003,7 +1019,7 @@ export default function AccountDashboard() {
               {/* Action 1: Account Info */}
               <button
                 type="button"
-                onClick={() => setDrawerOpen(true)}
+                onClick={() => setAccountInfoOpen(true)}
                 className="flex flex-col items-center justify-center p-5 bg-surface-container-lowest hover:bg-surface-container border border-surface-dim hover:border-primary/40 rounded-2xl transition-all shadow-sm group text-center"
               >
                 <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#1A2436] text-primary flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
@@ -1324,7 +1340,14 @@ export default function AccountDashboard() {
       <MobileBottomNav
         user={user}
         primaryAccount={accounts.find((a) => a.accountType !== "loan") || accounts[0]}
-        onOpenProfile={() => setDrawerOpen(true)}
+      />
+
+      {/* Account Info Modal with Routing Numbers, Account Numbers & Full Name */}
+      <AccountInfoModal
+        isOpen={accountInfoOpen}
+        onClose={() => setAccountInfoOpen(false)}
+        user={{ ...user, routingNumber }}
+        accounts={accounts}
       />
 
       {/* Quick Action Modal Overlay */}

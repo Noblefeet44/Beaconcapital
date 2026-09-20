@@ -105,14 +105,22 @@ export default function MobileBottomNav({
         </Link>
 
         {/* Tab 4: Profile */}
-        <button
-          type="button"
-          onClick={onOpenProfile}
-          className="flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+        <Link
+          href="/dashboard/profile"
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-colors ${
+            pathname.startsWith("/dashboard/profile")
+              ? "text-[#af0017] dark:text-[#E53935] font-bold"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
         >
-          <span className="material-symbols-outlined text-[24px]">person</span>
+          <span
+            className="material-symbols-outlined text-[24px]"
+            style={pathname.startsWith("/dashboard/profile") ? { fontVariationSettings: "'FILL' 1" } : {}}
+          >
+            person
+          </span>
           <span className="text-[10px] tracking-wide mt-0.5">Profile</span>
-        </button>
+        </Link>
       </nav>
 
       {/* ── Banking Menu Modal (Frame 00:05 Reference) ── */}
@@ -237,20 +245,17 @@ export default function MobileBottomNav({
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Loans</span>
               </Link>
 
-              {/* Settings */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  if (onOpenProfile) onOpenProfile();
-                }}
+              {/* Profile / Settings */}
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMenuOpen(false)}
                 className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-200 dark:border-slate-700/40 transition-transform active:scale-95 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-300 flex items-center justify-center mb-1.5">
-                  <span className="material-symbols-outlined text-2xl">settings</span>
+                  <span className="material-symbols-outlined text-2xl">person</span>
                 </div>
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Settings</span>
-              </button>
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Profile</span>
+              </Link>
 
               {/* Support */}
               <a

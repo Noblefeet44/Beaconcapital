@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import IdleLogoutProvider from "@/components/dashboard/IdleLogoutProvider";
 
 export const metadata: Metadata = {
   title: "User Dashboard",
@@ -15,5 +16,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <IdleLogoutProvider>{children}</IdleLogoutProvider>;
 }
+

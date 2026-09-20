@@ -180,6 +180,13 @@ export default function CardsPage() {
               <span className="material-symbols-outlined mr-3">add_circle</span>
               <span className="font-body-md text-body-md">Deposit</span>
             </Link>
+            <Link
+              className="flex items-center px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200"
+              href="/dashboard/profile"
+            >
+              <span className="material-symbols-outlined mr-3">person</span>
+              <span className="font-body-md text-body-md">My Profile</span>
+            </Link>
             <div className="my-2 border-t border-surface-dim" />
             <button
               onClick={handleLogout}

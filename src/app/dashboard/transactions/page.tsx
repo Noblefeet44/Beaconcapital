@@ -126,6 +126,10 @@ function TransactionHistoryContent() {
               <span className="material-symbols-outlined">add_circle</span>
               <span className="font-body-md text-body-md">Deposit</span>
             </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="/dashboard/profile">
+              <span className="material-symbols-outlined">person</span>
+              <span className="font-body-md text-body-md">My Profile</span>
+            </Link>
             <div className="my-2 border-t border-surface-dim" />
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200">
               <span className="material-symbols-outlined">logout</span>
