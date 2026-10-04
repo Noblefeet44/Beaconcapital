@@ -143,25 +143,25 @@ CREATE INDEX IF NOT EXISTS idx_cards_cardNumber ON cards ("cardNumber");
 -- Admin Account (username: admin, password: password123)
 INSERT INTO users (id, username, "passwordHash", "firstName", "lastName", phone, dob, "idType", "idNumber", issuance, expiry, role, status, "createdAt", "isFrozen")
 VALUES 
-('u-admin', 'admin', '$2a$10$VwzqSEnGe8IbuSZ00zVAEONNnyTiaj9qX.qrpBc4c/sE7/KLqAwiW', 'Chief', 'Compliance Officer', '+1 (555) 010-0000', '1980-01-01', 'passport', 'ADMIN-001', 'Beacon Authority', '2035-01-01', 'admin', 'Active', NOW(), FALSE)
+('u-admin', 'admin', '$2a$10$t8.6NerKovEsw47lL5Kw8..MHL9RKVTg7fCj2Iatl/VdYlyLDAVxS', 'Chief', 'Compliance Officer', '+1 (555) 010-0000', '1980-01-01', 'passport', 'ADMIN-001', 'Beacon Authority', '2035-01-01', 'admin', 'Active', NOW(), FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Demo Active User 1: Alexander Hamilton
 INSERT INTO users (id, username, "passwordHash", "firstName", "lastName", phone, dob, "idType", "idNumber", issuance, expiry, role, status, "createdAt", "isFrozen")
 VALUES 
-('u-alexander', 'alexander@beaconcapital.site', '$2a$10$VwzqSEnGe8IbuSZ00zVAEONNnyTiaj9qX.qrpBc4c/sE7/KLqAwiW', 'Alexander', 'Hamilton', '+1 (555) 019-2834', '1985-01-11', 'dl', 'DL-8492048-NY', 'New York', '2029-01-11', 'user', 'Active', NOW() - INTERVAL '30 days', FALSE)
+('u-alexander', 'alexander@beaconcapital.site', '$2a$10$t8.6NerKovEsw47lL5Kw8..MHL9RKVTg7fCj2Iatl/VdYlyLDAVxS', 'Alexander', 'Hamilton', '+1 (555) 019-2834', '1985-01-11', 'dl', 'DL-8492048-NY', 'New York', '2029-01-11', 'user', 'Active', NOW() - INTERVAL '30 days', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Demo Active User 2: Eleanor Vance
 INSERT INTO users (id, username, "passwordHash", "firstName", "lastName", phone, dob, "idType", "idNumber", issuance, expiry, role, status, "createdAt", "isFrozen")
 VALUES 
-('u-eleanor', 'eleanor@beaconcapital.site', '$2a$10$VwzqSEnGe8IbuSZ00zVAEONNnyTiaj9qX.qrpBc4c/sE7/KLqAwiW', 'Eleanor', 'Vance', '+1 (555) 392-4910', '1978-10-12', 'passport', 'PP-482019-US', 'United States', '2032-10-12', 'user', 'Active', NOW() - INTERVAL '60 days', FALSE)
+('u-eleanor', 'eleanor@beaconcapital.site', '$2a$10$t8.6NerKovEsw47lL5Kw8..MHL9RKVTg7fCj2Iatl/VdYlyLDAVxS', 'Eleanor', 'Vance', '+1 (555) 392-4910', '1978-10-12', 'passport', 'PP-482019-US', 'United States', '2032-10-12', 'user', 'Active', NOW() - INTERVAL '60 days', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Demo Pending Applicant: Philip Weeks (Waiting for admin approval)
 INSERT INTO users (id, username, "passwordHash", "firstName", "lastName", phone, dob, "idType", "idNumber", issuance, expiry, role, status, "createdAt", "isFrozen")
 VALUES 
-('u-philip', 'philip.weeks@example.com', '$2a$10$VwzqSEnGe8IbuSZ00zVAEONNnyTiaj9qX.qrpBc4c/sE7/KLqAwiW', 'Philip', 'Weeks', '+1 (555) 123-4567', '1998-06-24', 'dl', 'DL-PHILIP-12', 'NY', '2030-06-24', 'user', 'Pending', NOW() - INTERVAL '2 hours', FALSE)
+('u-philip', 'philip.weeks@example.com', '$2a$10$t8.6NerKovEsw47lL5Kw8..MHL9RKVTg7fCj2Iatl/VdYlyLDAVxS', 'Philip', 'Weeks', '+1 (555) 123-4567', '1998-06-24', 'dl', 'DL-PHILIP-12', 'NY', '2030-06-24', 'user', 'Pending', NOW() - INTERVAL '2 hours', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Accounts for Alexander (with unique 10-digit numbers, routing number, and loan facility)

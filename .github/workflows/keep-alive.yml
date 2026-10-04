@@ -1,0 +1,34 @@
+name: Keep Supabase Active
+
+on:
+  schedule:
+    # Runs every 2 days at 06:00 UTC (well within Supabase's 7-day inactivity limit)
+    - cron: '0 6 */2 * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://sbpdbrbmyhxemlhpafkm.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicGRicmJteWh4ZW1saHBhZmttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjM5NDMsImV4cCI6MjA5Nzk5OTk0M30.Fq6quRl6_e7DodfhI4pP4AvYMbiboYLjbaBLO1ZHV18' }}
+        run: |
+          echo "Sending keep-alive heartbeat to Supabase..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X GET \
+            "$SUPABASE_URL/rest/v1/users?select=id&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+          
+          echo "Supabase Response HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "Supabase project is active and healthy!"
+          else
+            echo "Warning: Response status was $HTTP_STATUS (attempting health endpoint fallback)..."
+            curl -s "$SUPABASE_URL/rest/v1/" -H "apikey: $SUPABASE_KEY"
+          fi
+
+      - name: Ping Web Application Keep-Alive Endpoint (Optional)
+        run: |
+          curl -s -o /dev/null -w "App Ping: %{http_code}\n" "https://beaconcapital.site/api/cron/keepalive" || true

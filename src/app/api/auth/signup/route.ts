@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set("beacon_session", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
